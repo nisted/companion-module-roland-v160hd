@@ -25,7 +25,8 @@ function fakeSwitcher(version, { refuse = [] } = {}) {
 				}
 				got.push(line)
 				const reply = answer(line)
-				if (reply) setTimeout(() => sock.write(reply), 2)
+				// Like the real switcher: an invisible 0x02 in front of every reply
+				if (reply) setTimeout(() => sock.write(reply.replace(/([^;]+;)/g, '\x02$1')), 2)
 			}
 		})
 	})

@@ -85,3 +85,36 @@ test('ERR turns into a plain-words warning, mentioning firmware for Input 11-20'
 	assert.match(logs.at(-1)[1], /out of range/)
 	assert.match(logs.at(-1)[1], /3\.40/)
 })
+
+test('replies with the invisible start byte (0x02) are still read', () => {
+	const { self } = makeFake()
+	self._protocolDecided = false
+	self.startInterval = () => {}
+	feed(self, '\x02VER:V-160HD,3.60', '\x02ACK')
+	assert.equal(self.PROTOCOL, 'named')
+	feed(self, '\x02DTH:002100,2A21')
+	assert.equal(self.DATA.pgmsource, '2A')
+	feed(self, '\x02PGM:HDMI1,INPUT3')
+	assert.equal(self.DATA.pgmsource, '22')
+})
+
+test('a low-level read with the start byte finishes on its reply, not the timeout', () => {
+	const { makeFake: mk } = require('../test-support/fake')
+	const { CommandQueue } = require('../src/commandQueue')
+	const { self } = mk()
+	const sent = []
+	self._queue = new CommandQueue({
+		send: (c) => sent.push(c),
+		timeoutMs: 1e9,
+		gapMs: 0,
+		timers: { setTimeout: (fn, ms) => (ms < 1e6 ? fn() : 0, 0), clearTimeout: () => {} },
+	})
+	self._read('RQH:002100,000002;')
+	self._read('RQH:000011,000001;')
+	assert.equal(sent.length, 1)
+	self.updateData('\x02DTH:002100,2021')
+	assert.equal(sent.length, 2)
+	self.updateData('\x02ACK')
+	self.updateData('\x02DTH:000011,05')
+	assert.equal(self.DATA.aux1source, '05')
+})

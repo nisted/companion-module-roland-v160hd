@@ -408,7 +408,11 @@ module.exports = {
 
 	updateData: function (data) {
 		let self = this
-		const msg = String(data).trim()
+		// The switcher puts an invisible start byte (0x02, Roland's "stx") in front of
+		// its replies. Strip that and any other control characters before reading.
+		const msg = String(data)
+			.replace(/[\x00-\x1F\x7F]/g, '')
+			.trim()
 		if (msg === '') return
 		self.logVerbose('Received: ' + msg)
 
