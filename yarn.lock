@@ -14,6 +14,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@companion-module/base@npm:~2.2.1":
+  version: 2.2.2
+  resolution: "@companion-module/base@npm:2.2.2"
+  dependencies:
+    colord: "npm:^2.10.0"
+    zod: "npm:^4.6.7"
+  checksum: 10c0/b4817166bb27d1c5f83c4d1eff1027910eef64a04466bfe4f1ee1b2e7cef9fcd8bf482b6a3c974b28f5f065036df6cb5e40cc59b7b5657cac30e7132e30d0880
+  languageName: node
+  linkType: hard
+
+"@companion-module/host@npm:^1.1.0":
+  version: 1.2.1
+  resolution: "@companion-module/host@npm:1.2.1"
+  dependencies:
+    "@companion-module/base": "npm:~2.2.1"
+    colord: "npm:^2.10.0"
+    debounce-fn: "npm:^6.0.0"
+    fast-deep-equal: "npm:^3.1.3"
+    p-queue: "npm:^9.3.3"
+    semver: "npm:^7.8.5"
+    zod: "npm:^4.6.5"
+  checksum: 10c0/dd555289898917c6e584790b392d3acdeda54770f536058fc80e938298433732a907509073d84c312e356df31850cdbb11ff9d6562df800c558e123d403eca66
+  languageName: node
+  linkType: hard
+
 "@companion-module/tools@npm:^3.1.1":
   version: 3.2.0
   resolution: "@companion-module/tools@npm:3.2.0"
@@ -303,10 +328,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"colord@npm:^2.9.3":
+"colord@npm:^2.10.0, colord@npm:^2.9.3":
   version: 2.11.0
   resolution: "colord@npm:2.11.0"
   checksum: 10c0/01d692758749692a8ead360e89c6e19c39e2c77da2f36cea7404650cba2d6dcdeaefbf3f1fc05c4dcf675b8476b879486eff751d2c3158d390756f82ec711bd9
+  languageName: node
+  linkType: hard
+
+"debounce-fn@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "debounce-fn@npm:6.0.0"
+  dependencies:
+    mimic-function: "npm:^5.0.0"
+  checksum: 10c0/ff5c48a7d644e292a653fd602db340b701bddba3973da7f64c6f25bbd9ab0fde9058567fdbe7efc72553561f3393f285413818d58f08614e73e0e85319f1da6e
   languageName: node
   linkType: hard
 
@@ -497,6 +531,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eventemitter3@npm:^5.0.4":
+  version: 5.0.4
+  resolution: "eventemitter3@npm:5.0.4"
+  checksum: 10c0/575b8cac8d709e1473da46f8f15ef311b57ff7609445a7c71af5cd42598583eee6f098fa7a593e30f27e94b8865642baa0689e8fa97c016f742abdb3b1bf6d9a
+  languageName: node
+  linkType: hard
+
+"fast-deep-equal@npm:^3.1.3":
+  version: 3.1.3
+  resolution: "fast-deep-equal@npm:3.1.3"
+  checksum: 10c0/40dedc862eb8992c54579c66d914635afbec43350afbbe991235fdcb4e3a8d5af1b23ae7e79bef7d4882d0ecee06c3197488026998fb19f72dc95acff1d1b1d0
+  languageName: node
+  linkType: hard
+
 "fast-diff@npm:^1.1.2":
   version: 1.3.0
   resolution: "fast-diff@npm:1.3.0"
@@ -571,6 +619,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mimic-function@npm:^5.0.0":
+  version: 5.0.1
+  resolution: "mimic-function@npm:5.0.1"
+  checksum: 10c0/f3d9464dd1816ecf6bdf2aec6ba32c0728022039d992f178237d8e289b48764fee4131319e72eedd4f7f094e22ded0af836c3187a7edc4595d28dd74368fd81d
+  languageName: node
+  linkType: hard
+
 "minipass@npm:^7.0.4, minipass@npm:^7.1.2":
   version: 7.1.3
   resolution: "minipass@npm:7.1.3"
@@ -605,6 +660,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"p-queue@npm:^9.3.3":
+  version: 9.3.5
+  resolution: "p-queue@npm:9.3.5"
+  dependencies:
+    eventemitter3: "npm:^5.0.4"
+    p-timeout: "npm:^7.0.0"
+  checksum: 10c0/44652095edcf36e44bafda8fd6bb6be2d96e1fc05982f0f26afd768e0b07e228dc206b07b3c303771494cecfd28e5797f8e8771c9d5db280561e031fbfcb57a5
+  languageName: node
+  linkType: hard
+
+"p-timeout@npm:^7.0.0":
+  version: 7.0.2
+  resolution: "p-timeout@npm:7.0.2"
+  checksum: 10c0/26595bbda27361a15231a82d8d3ef4f277bb3e9647aaa4a554b90012d03d22aaf28165b60afffe9425fb1326bd40b93f145d76eb23adb6b76d07d5f5d4c7964a
+  languageName: node
+  linkType: hard
+
 "prettier-linter-helpers@npm:^1.0.1":
   version: 1.0.1
   resolution: "prettier-linter-helpers@npm:1.0.1"
@@ -635,6 +707,7 @@ __metadata:
   resolution: "roland-v160hd@workspace:."
   dependencies:
     "@companion-module/base": "npm:~2.1.3"
+    "@companion-module/host": "npm:^1.1.0"
     "@companion-module/tools": "npm:^3.1.1"
     prettier: "npm:^3.2.5"
   languageName: unknown
@@ -721,6 +794,13 @@ __metadata:
   version: 1.2.2
   resolution: "yocto-queue@npm:1.2.2"
   checksum: 10c0/36d4793e9cf7060f9da543baf67c55e354f4862c8d3d34de1a1b1d7c382d44171315cc54abf84d8900b8113d742b830108a1434f4898fb244f9b7e8426d4b8f5
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.6.5, zod@npm:^4.6.7":
+  version: 4.6.7
+  resolution: "zod@npm:4.6.7"
+  checksum: 10c0/4ce2eb14034317b7254e347ca37b5ad591cf8333147030cf05b9b5d31692d45073f7f2747aa50cf8c6b29012194d2b22978cecc89969cf34a0d18e89d0ee7d7b
   languageName: node
   linkType: hard
 

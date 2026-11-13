@@ -1053,7 +1053,7 @@ module.exports = {
 		if (opts && opts.needsNamed && self.PROTOCOL !== 'named') {
 			extra = " Input 11-20 here needs switcher firmware 3.40 or later (Roland's named commands)."
 		}
-		self.log('warn', `The switcher turned down ${cmd}: ${why}.${extra}`)
+		self.log('warn', `The switcher turned down ${String(cmd).replace(/;$/, '')}: ${why}.${extra}`)
 	},
 
 	requestData: function (command) {
