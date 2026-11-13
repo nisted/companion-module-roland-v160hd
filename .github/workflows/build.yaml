@@ -1,0 +1,44 @@
+name: Build
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - run: corepack enable
+      - run: yarn install --no-immutable
+      - name: Dev kit (node_modules + lockfile) for offline work
+        run: tar czf devkit.tgz node_modules yarn.lock
+      - uses: actions/upload-artifact@v4
+        with:
+          name: devkit
+          path: devkit.tgz
+          retention-days: 3
+      - run: yarn test
+      - run: yarn package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: companion-module-roland-v160hd
+          path: 'roland-v160hd-*.tgz'
+          if-no-files-found: error
+
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: 'roland-v160hd-*.tgz'
