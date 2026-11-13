@@ -23,11 +23,13 @@ jobs:
       - run: yarn install --no-immutable
       - name: Dev kit (node_modules + lockfile) for offline work
         run: tar czf devkit.tgz node_modules yarn.lock
-      - uses: actions/upload-artifact@v4
-        with:
-          name: devkit
-          path: devkit.tgz
-          retention-days: 3
+      - name: Publish dev kit to the devkit branch (only when asked)
+        if: contains(github.event.head_commit.message, '[devkit]')
+        run: |
+          mkdir /tmp/dk && mv devkit.tgz /tmp/dk/ && cd /tmp/dk
+          git init -q -b devkit && git add devkit.tgz
+          git -c user.name=ci -c user.email=ci@localhost commit -qm devkit
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" devkit
       - run: yarn test
       - run: yarn package
 
