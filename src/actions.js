@@ -1,3 +1,5 @@
+const { routingActions, extraActions } = require('./actionsRouting')
+
 module.exports = {
 	initActions: function () {
 		let self = this
@@ -15,7 +17,6 @@ module.exports = {
 					max: 100,
 					default: 1,
 					step: 1,
-					required: true,
 					range: false,
 				},
 			],
@@ -25,43 +26,16 @@ module.exports = {
 				let macroZero = macro - 1
 				let value = macroZero.toString(16).padStart(2, '0').toUpperCase()
 
-				let address = '500504'
-				self.sendCommand(address, value)
+				if (!Number.isInteger(Number(macro)) || macro < 1 || macro > 100) {
+					self.log('warn', `Run Macro: there's no macro "${macro}" (1 to 100).`)
+					return
+				}
+				if (self.PROTOCOL === 'named') self.sendNamed(`MCREX:MACRO${macro}`, { repeatable: false })
+				else self.sendCommand('500504', value, { repeatable: false })
 			},
 		}
 
-		actions.input_assign = {
-			name: 'Assign Input',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'Input Channel',
-					id: 'input',
-					default: self.CHOICES_INPUTS[0].id,
-					choices: self.CHOICES_INPUTS,
-				},
-				{
-					type: 'dropdown',
-					label: 'Input Type',
-					id: 'assign',
-					default: self.CHOICES_INPUTSASSIGN[0].id,
-					choices: self.CHOICES_INPUTSASSIGN,
-				},
-			],
-			callback: function (action, bank) {
-				let options = action.options
-				const inputIdx = options.input
-				const address = '00' + '00' + inputIdx.toString(16).padStart(2, '0').toUpperCase()
-				const value = options.assign.toString(16).padStart(2, '0').toUpperCase()
-				// Optimistic cache update so auxTally feedback reflects the change immediately.
-				if (!Array.isArray(self.DATA.inputAssign)) self.DATA.inputAssign = new Array(20).fill(undefined)
-				self.DATA.inputAssign[inputIdx] = value
-				self.sendCommand(address, value)
-				self.checkFeedbacks()
-				// Readback to reconcile with authoritative hardware state.
-				self.sendRawCommand('RQH:' + address + ',000001;')
-			},
-		}
+		routingActions(self, actions)
 
 		actions.output_assign = {
 			name: 'Assign Output',
@@ -144,37 +118,6 @@ module.exports = {
 			},
 		}
 
-		actions.aux_assign = {
-			name: 'Assign Aux',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'Aux',
-					id: 'aux',
-					default: '000011',
-					choices: [
-						{ id: '000011', label: 'Aux 1' },
-						{ id: '00002E', label: 'Aux 2' },
-						{ id: '00002F', label: 'Aux 3' },
-					],
-				},
-				{
-					type: 'dropdown',
-					label: 'Input Type',
-					id: 'assign',
-					default: self.CHOICES_PGMPVW_SELECT[0].id,
-					choices: self.CHOICES_PGMPVW_SELECT,
-				},
-			],
-			callback: function (action, bank) {
-				let options = action.options
-				let address = options.aux
-
-				let value = options.assign
-				self.sendCommand(address, value)
-			},
-		}
-
 		actions.aux_mute = {
 			name: 'Mute Aux',
 			options: [
@@ -210,7 +153,9 @@ module.exports = {
 		}
 
 		actions.pnpkey_enable = {
-			name: 'PnP & Key Enable/Disable',
+			name: 'PnP & Key: allow on the Program / Sub Program layer (layer setting)',
+			description:
+				"This is the layer setting, not taking a PinP on air. For on air, use 'PnP & Key: on/off on PGM or PVW'.",
 			options: [
 				{
 					type: 'dropdown',
@@ -275,7 +220,7 @@ module.exports = {
 		}
 
 		actions.pnpkey_busselect = {
-			name: 'PnP & Key Bus Select',
+			name: 'PnP & Key: on/off on PGM or PVW',
 			options: [
 				{
 					type: 'dropdown',
@@ -314,37 +259,6 @@ module.exports = {
 				let options = action.options
 				let address = `00${options.pinp}${options.bus}`
 				let value = options.onoff
-				self.sendCommand(address, value)
-			},
-		}
-
-		actions.pnpkey_setsource = {
-			name: 'PnP & Key Set Source',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'PnP/Key',
-					id: 'pinp',
-					default: '1B',
-					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
-					],
-				},
-				{
-					type: 'dropdown',
-					label: 'Source',
-					id: 'source',
-					default: self.CHOICES_PNPKEY_SOURCES[0].id,
-					choices: self.CHOICES_PNPKEY_SOURCES,
-				},
-			],
-			callback: function (action, bank) {
-				let options = action.options
-				let address = `00${options.pinp}02`
-				let value = options.source
 				self.sendCommand(address, value)
 			},
 		}
@@ -410,7 +324,6 @@ module.exports = {
 					max: 100,
 					default: 50.0,
 					step: 0.1,
-					required: true,
 					range: true,
 				},
 			],
@@ -448,7 +361,6 @@ module.exports = {
 					max: 100,
 					default: 50.0,
 					step: 0.1,
-					required: true,
 					range: true,
 				},
 			],
@@ -486,7 +398,6 @@ module.exports = {
 					max: 100.0,
 					default: 50.0,
 					step: 0.1,
-					required: true,
 					range: true,
 				},
 			],
@@ -524,7 +435,6 @@ module.exports = {
 					max: 100.0,
 					default: 0.0,
 					step: 0.1,
-					required: true,
 					range: true,
 				},
 			],
@@ -562,7 +472,6 @@ module.exports = {
 					max: 100.0,
 					default: 0.0,
 					step: 0.1,
-					required: true,
 					range: true,
 				},
 			],
@@ -677,7 +586,6 @@ module.exports = {
 					max: 14,
 					default: 5,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -714,7 +622,6 @@ module.exports = {
 					max: 50,
 					default: 0.0,
 					step: 0.1,
-					required: true,
 					range: true,
 				},
 			],
@@ -752,7 +659,6 @@ module.exports = {
 					max: 50,
 					default: 0.0,
 					step: 0.1,
-					required: true,
 					range: true,
 				},
 			],
@@ -790,7 +696,6 @@ module.exports = {
 					max: 400,
 					default: 100,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -828,7 +733,6 @@ module.exports = {
 					max: 255,
 					default: 50,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -866,7 +770,6 @@ module.exports = {
 					max: 255,
 					default: 50,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -904,7 +807,6 @@ module.exports = {
 					max: 255,
 					default: 50,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -976,7 +878,6 @@ module.exports = {
 					max: 30,
 					default: 0,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -1012,7 +913,6 @@ module.exports = {
 					max: 360,
 					default: 0,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -1050,7 +950,6 @@ module.exports = {
 					max: 127,
 					default: 0,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -1088,7 +987,6 @@ module.exports = {
 					max: 255,
 					default: 0,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -1126,7 +1024,6 @@ module.exports = {
 					max: 255,
 					default: 0,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -1164,7 +1061,6 @@ module.exports = {
 					max: 255,
 					default: 0,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -1202,7 +1098,6 @@ module.exports = {
 					max: 255,
 					default: 0,
 					step: 1,
-					required: true,
 					range: true,
 				},
 			],
@@ -1217,7 +1112,7 @@ module.exports = {
 		}
 
 		actions.dsk_busselect = {
-			name: 'DSK Bus Select',
+			name: 'DSK: on/off on PGM or PVW',
 			options: [
 				{
 					type: 'dropdown',
@@ -1277,7 +1172,6 @@ module.exports = {
 					max: 4.0,
 					default: 1.0,
 					step: 0.1,
-					required: true,
 					range: true,
 				},
 			],
@@ -1426,32 +1320,6 @@ module.exports = {
 			},
 		}
 
-		actions.set_pinp_source = {
-			name: 'Set PnP & Key Source',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'PnP/Key',
-					id: 'pinp',
-					default: self.CHOICES_PINP_KEYS[0].id,
-					choices: self.CHOICES_PINP_KEYS,
-				},
-				{
-					type: 'dropdown',
-					label: 'Input Type',
-					id: 'assign',
-					default: self.CHOICES_INPUTSASSIGN[0].id,
-					choices: self.CHOICES_INPUTSASSIGN,
-				},
-			],
-			callback: function (action, bank) {
-				let options = action.options
-				let address = '00' + options.pinp.toString(16).padStart(2, '0').toUpperCase() + '02'
-				let value = options.assign.toString(16).padStart(2, '0').toUpperCase()
-				self.sendCommand(address, value)
-			},
-		}
-
 		actions.set_pinp_type = {
 			name: 'Set PnP & Key Type',
 			options: [
@@ -1478,58 +1346,6 @@ module.exports = {
 			},
 		}
 
-		actions.set_dsk_key_source = {
-			name: 'Set DSK Key Source',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'DSK',
-					id: 'dsk',
-					default: self.CHOICES_DSK[0].id,
-					choices: self.CHOICES_DSK,
-				},
-				{
-					type: 'dropdown',
-					label: 'Input Type',
-					id: 'assign',
-					default: self.CHOICES_INPUTSASSIGN[0].id,
-					choices: self.CHOICES_INPUTSASSIGN,
-				},
-			],
-			callback: function (action, bank) {
-				let options = action.options
-				let address = '00' + options.dsk.toString(16).padStart(2, '0').toUpperCase() + '03'
-				let value = options.assign.toString(16).padStart(2, '0').toUpperCase()
-				self.sendCommand(address, value)
-			},
-		}
-
-		actions.set_dsk_fill_source = {
-			name: 'Set DSK Fill Source',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'DSK',
-					id: 'dsk',
-					default: self.CHOICES_DSK[0].id,
-					choices: self.CHOICES_DSK,
-				},
-				{
-					type: 'dropdown',
-					label: 'Input Type',
-					id: 'assign',
-					default: self.CHOICES_INPUTSASSIGN[0].id,
-					choices: self.CHOICES_INPUTSASSIGN,
-				},
-			],
-			callback: function (action, bank) {
-				let options = action.options
-				let address = '00' + options.dsk.toString(16).padStart(2, '0').toUpperCase() + '04'
-				let value = options.assign.toString(16).padStart(2, '0').toUpperCase()
-				self.sendCommand(address, value)
-			},
-		}
-
 		actions.set_dsk_type = {
 			name: 'Set DSK Key Type',
 			options: [
@@ -1552,44 +1368,6 @@ module.exports = {
 				let options = action.options
 				let address = '00' + options.dsk.toString(16).padStart(2, '0').toUpperCase() + '05'
 				let value = options.key.toString(16).padStart(2, '0').toUpperCase()
-				self.sendCommand(address, value)
-			},
-		}
-
-		actions.select_pgm = {
-			name: 'Select PGM Source',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'Input',
-					id: 'input',
-					default: self.CHOICES_PGMPVW_SELECT[0].id,
-					choices: self.CHOICES_PGMPVW_SELECT,
-				},
-			],
-			callback: function (action, bank) {
-				let options = action.options
-				let address = '00' + '21' + '00'
-				let value = options.input
-				self.sendCommand(address, value)
-			},
-		}
-
-		actions.select_pvw = {
-			name: 'Select PVW Source',
-			options: [
-				{
-					type: 'dropdown',
-					label: 'Input',
-					id: 'input',
-					default: self.CHOICES_PGMPVW_SELECT[0].id,
-					choices: self.CHOICES_PGMPVW_SELECT,
-				},
-			],
-			callback: function (action, bank) {
-				let options = action.options
-				let address = '00' + '21' + '01'
-				let value = options.input
 				self.sendCommand(address, value)
 			},
 		}
@@ -1796,6 +1574,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -1804,7 +1583,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 				{
 					type: 'dropdown',
@@ -1851,6 +1630,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -1859,7 +1639,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -1886,6 +1666,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -1894,7 +1675,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -1921,6 +1702,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -1929,7 +1711,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -1956,6 +1738,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -1964,7 +1747,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -1991,6 +1774,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -1999,7 +1783,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -2026,6 +1810,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2034,7 +1819,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -2061,6 +1846,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2069,7 +1855,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 				{
 					type: 'number',
@@ -2080,7 +1866,6 @@ module.exports = {
 					max: 24,
 					default: 10,
 					step: 1,
-					required: true,
 					range: false,
 				},
 			],
@@ -2109,6 +1894,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2117,7 +1903,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -2144,6 +1930,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2152,7 +1939,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -2179,6 +1966,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2187,7 +1975,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -2214,6 +2002,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2222,7 +2011,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -2249,6 +2038,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2257,7 +2047,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -2284,6 +2074,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2292,7 +2083,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 				{
 					type: 'dropdown',
@@ -2331,6 +2122,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2339,7 +2131,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -2366,6 +2158,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2374,7 +2167,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 			],
 			callback: function (action, bank) {
@@ -2401,6 +2194,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2409,7 +2203,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 				{
 					type: 'dropdown',
@@ -2447,6 +2241,7 @@ module.exports = {
 					label: 'Use Selected Camera',
 					id: 'useSelected',
 					default: false,
+					disableAutoExpression: true,
 					tooltip: 'Use the selected camera instead of the camera selected in the action',
 				},
 				{
@@ -2455,7 +2250,7 @@ module.exports = {
 					id: 'camera',
 					default: self.CHOICES_CAMERAS[0].id,
 					choices: self.CHOICES_CAMERAS,
-					isVisible: (options) => options.useSelected === false,
+					isVisibleExpression: '!$(options:useSelected)',
 				},
 				{
 					type: 'dropdown',
@@ -2500,6 +2295,7 @@ module.exports = {
 			},
 		}
 
+		extraActions(self, actions)
 		self.setActionDefinitions(actions)
 	},
 }

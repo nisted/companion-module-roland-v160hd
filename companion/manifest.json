@@ -1,26 +1,31 @@
 {
+	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+	"type": "connection",
 	"id": "roland-v160hd",
 	"name": "roland-v160hd",
-	"shortname": "v160hd",
-	"description": "",
+	"shortname": "V-160HD",
+	"description": "Roland V-160HD (Rebel): Input 1-20 in every destination, named or low-level commands, polite polling, presets",
 	"version": "0.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-roland-v160hd.git",
-	"bugs": "https://github.com/bitfocus/companion-module-roland-v160hd/issues",
+	"repository": "git+https://github.com/nisted/companion-module-roland-v160hd.git",
+	"bugs": "https://github.com/nisted/companion-module-roland-v160hd/issues",
 	"maintainers": [
 		{
 			"name": "Joseph Adams",
 			"email": "josephdadams@gmail.com"
+		},
+		{
+			"name": "Nigel Isted"
 		}
 	],
 	"legacyIds": [],
 	"runtime": {
-		"type": "node18",
+		"type": "node22",
 		"api": "nodejs-ipc",
 		"apiVersion": "0.0.0",
-		"entrypoint": "../index.js"
+		"entrypoint": "../main.mjs"
 	},
 	"manufacturer": "Roland",
 	"products": ["V-160HD"],
-	"keywords": ["Vision Mixer", "Video Switcher"]
+	"keywords": ["Vision Mixer", "Video Switcher", "Rebel"]
 }

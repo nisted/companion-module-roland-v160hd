@@ -1,4 +1,5 @@
 const { combineRgb } = require('@companion-module/base')
+const { sourceFeedbacks } = require('./feedbacksSources')
 
 module.exports = {
 	initFeedbacks: function () {
@@ -8,119 +9,11 @@ module.exports = {
 		const foregroundColor = combineRgb(255, 255, 255) // White
 		const backgroundColorRed = combineRgb(255, 0, 0) // Red
 
-		feedbacks.tally = {
-			type: 'boolean',
-			name: 'Tally State',
-			description: 'Indicate if Input Channel is in Preview or Program',
-			style: {
-				color: foregroundColor,
-				bgcolor: backgroundColorRed,
-			},
-			options: [
-				{
-					type: 'dropdown',
-					label: 'Input Channel',
-					id: 'input',
-					default: self.TALLYDATA[0].id,
-					choices: self.TALLYDATA,
-				},
-				{
-					type: 'dropdown',
-					label: 'Indicate in X State',
-					id: 'state',
-					default: 'program',
-					choices: [
-						{ id: 'program', label: 'Program (A)' },
-						{ id: 'preview', label: 'Preview (B)' },
-						{ id: 'both', label: 'Both' },
-					],
-				},
-			],
-			callback: function (feedback, bank) {
-				let opt = feedback.options
-
-				let tallyObj = self.TALLYDATA.find((obj) => obj.id == opt.input)
-
-				if (tallyObj) {
-					const status = tallyObj.status
-
-					if (opt.state === 'program') {
-						return (status & 0x01) !== 0
-					}
-
-					if (opt.state === 'preview') {
-						return (status & 0x02) !== 0
-					}
-
-					if (opt.state === 'both') {
-						return (status & 0x03) === 0x03
-					}
-				}
-
-				return false
-			},
-		}
-
-		feedbacks.auxTally = {
-			type: 'boolean',
-			name: 'Aux Tally State',
-			description: 'Indicate if Input Channel is in an Auxiliary Channel',
-			style: {
-				color: foregroundColor,
-				bgcolor: backgroundColorRed,
-			},
-			options: [
-				{
-					type: 'dropdown',
-					label: 'Aux',
-					id: 'aux',
-					default: 'aux1',
-					choices: [
-						{ id: 'aux1', label: 'Aux 1' },
-						{ id: 'aux2', label: 'Aux 2' },
-						{ id: 'aux3', label: 'Aux 3' },
-					],
-				},
-				{
-					type: 'dropdown',
-					label: 'Input Type',
-					id: 'assign',
-					default: self.CHOICES_PGMPVW_SELECT[0].id,
-					choices: self.CHOICES_PGMPVW_SELECT,
-				},
-			],
-			callback: function (feedback, bank) {
-				let opt = feedback.options
-				const target = opt.assign
-				const auxMap = { aux1: 'aux1source', aux2: 'aux2source', aux3: 'aux3source' }
-				const key = auxMap[opt.aux]
-				if (!key) return false
-
-				const raw = self.DATA[key]
-				if (raw === undefined) return false
-
-				if (raw === target) return true
-
-				// If the target is a physical source (00–1F) and the AUX is showing
-				// a logical INPUT source (20–33), resolve INPUT→physical for comparison.
-				const targetCode = parseInt(target, 16)
-				if (targetCode <= 0x1f) {
-					const srcCode = parseInt(raw, 16)
-					if (srcCode >= 0x20 && srcCode <= 0x33) {
-						const physical = self._resolveInputToPhysical(raw)
-						if (physical !== raw && physical.toUpperCase() === target) return true
-					}
-				}
-
-				return false
-			},
-		}
-
 		feedbacks.auxMute = {
 			type: 'boolean',
 			name: 'Aux Mute State',
 			description: 'Indicate if Aux Channel is Muted',
-			style: {
+			defaultStyle: {
 				color: foregroundColor,
 				bgcolor: backgroundColorRed,
 			},
@@ -176,7 +69,7 @@ module.exports = {
 			type: 'boolean',
 			name: 'Output Assign State',
 			description: 'Indicate if Output is Assigned to a specific Source',
-			style: {
+			defaultStyle: {
 				color: foregroundColor,
 				bgcolor: backgroundColorRed,
 			},
@@ -259,7 +152,7 @@ module.exports = {
 			type: 'boolean',
 			name: 'Aux Link Mode',
 			description: 'Indicate if Aux Link Mode is Off, Auto Link, or Manual Link',
-			style: {
+			defaultStyle: {
 				color: foregroundColor,
 				bgcolor: backgroundColorRed,
 			},
@@ -291,7 +184,7 @@ module.exports = {
 			type: 'boolean',
 			name: 'Aux Link State',
 			description: 'Indicate if Aux Channel is Linked to PGM',
-			style: {
+			defaultStyle: {
 				color: foregroundColor,
 				bgcolor: backgroundColorRed,
 			},
@@ -347,7 +240,7 @@ module.exports = {
 			type: 'boolean',
 			name: 'Key is Selected on Bus',
 			description: 'Indicate if Key is Selected on Bus',
-			style: {
+			defaultStyle: {
 				color: foregroundColor,
 				bgcolor: backgroundColorRed,
 			},
@@ -402,7 +295,7 @@ module.exports = {
 			type: 'boolean',
 			name: 'Freeze State',
 			description: 'Indicate if Freeze is On or Off',
-			style: {
+			defaultStyle: {
 				color: foregroundColor,
 				bgcolor: backgroundColorRed,
 			},
@@ -421,48 +314,7 @@ module.exports = {
 			},
 		}
 
-		feedbacks.pnpKeySource = {
-			type: 'boolean',
-			name: 'PnP/Key Source State',
-			description: 'Indicate if PnP/Key Source is Selected on PnP/Key',
-			style: {
-				color: foregroundColor,
-				bgcolor: backgroundColorRed,
-			},
-			options: [
-				{
-					type: 'dropdown',
-					label: 'PnP/Key',
-					id: 'pinp',
-					default: 'pnpkey1',
-					choices: [
-						{ id: 'pnpkey1', label: 'PnP/Key 1' },
-						{ id: 'pnpkey2', label: 'PnP/Key 2' },
-						{ id: 'pnpkey3', label: 'PnP/Key 3' },
-						{ id: 'pnpkey4', label: 'PnP/Key 4' },
-					],
-				},
-				{
-					type: 'dropdown',
-					label: 'Source',
-					id: 'source',
-					default: self.CHOICES_PNPKEY_SOURCES[0].id,
-					choices: self.CHOICES_PNPKEY_SOURCES,
-				},
-			],
-			callback: function (feedback, bank) {
-				let opt = feedback.options
-
-				let obj = self.DATA[opt.pinp + 'source']
-
-				if (obj == opt.source) {
-					return true
-				}
-
-				return false
-			},
-		}
-
+		sourceFeedbacks(self, feedbacks)
 		self.setFeedbackDefinitions(feedbacks)
 	},
 }

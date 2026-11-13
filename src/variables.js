@@ -1,217 +1,112 @@
+'use strict'
+
+const sources = require('./sources')
+
+const label = (hex) => sources.sourceFromHex(hex)?.label ?? ''
+const onOff = (v) => (v == '01' ? 'On' : 'Off')
+const tallyText = (st) => (st & 0x01 ? 'Program' : st & 0x02 ? 'Preview' : 'Off')
+
 module.exports = {
 	initVariables: function () {
-		let self = this
-		let variables = []
+		const v = {}
+		const add = (id, name) => (v[id] = { name })
 
-		variables.push({ variableId: 'model', name: 'Model' })
-		variables.push({ variableId: 'version', name: 'Version' })
+		add('model', 'Model')
+		add('version', 'Firmware version')
+		add('protocol', 'Command set in use (named or lowlevel)')
 
-		for (let i = 0; i < self.TALLYDATA.length; i++) {
-			variables.push({ variableId: 'tally_' + self.TALLYDATA[i].shortlabel, name: self.TALLYDATA[i].label + ' Tally' })
+		for (const s of sources.SOURCES) add(`tally_${s.id.toLowerCase()}`, `Tally: ${s.label}`)
+		// Older name for Input 1-10 tally, kept so existing buttons keep working
+		for (let i = 1; i <= 10; i++) add(`tally_xpt${i}`, `Tally: Input ${i} (old name)`)
+
+		add('pgm', 'Program source')
+		add('pvw', 'Preview source')
+		for (let i = 1; i <= 3; i++) add(`aux${i}`, `Aux ${i} source`)
+		for (let i = 1; i <= 4; i++) {
+			add(`pnpkey${i}_source`, `PinP & Key ${i} source`)
+			add(`pnpkey${i}_pgm`, `PinP & Key ${i} on PGM`)
+			add(`pnpkey${i}_pvw`, `PinP & Key ${i} on PVW`)
 		}
-
-		variables.push({ variableId: 'pnpkey1_pgm', name: 'PnP/Key 1 on PGM' })
-		variables.push({ variableId: 'pnpkey1_pvw', name: 'PnP/Key 1 on PVW' })
-		variables.push({ variableId: 'pnpkey2_pgm', name: 'PnP/Key 2 on PGM' })
-		variables.push({ variableId: 'pnpkey2_pvw', name: 'PnP/Key 2 on PVW' })
-		variables.push({ variableId: 'pnpkey3_pgm', name: 'PnP/Key 3 on PGM' })
-		variables.push({ variableId: 'pnpkey3_pvw', name: 'PnP/Key 3 on PVW' })
-		variables.push({ variableId: 'pnpkey4_pgm', name: 'PnP/Key 4 on PGM' })
-		variables.push({ variableId: 'pnpkey4_pvw', name: 'PnP/Key 4 on PVW' })
-
-		//pnp/key sources
-		variables.push({ variableId: 'pnpkey1_source', name: 'PnP/Key 1 Source' })
-		variables.push({ variableId: 'pnpkey2_source', name: 'PnP/Key 2 Source' })
-		variables.push({ variableId: 'pnpkey3_source', name: 'PnP/Key 3 Source' })
-		variables.push({ variableId: 'pnpkey4_source', name: 'PnP/Key 4 Source' })
-
-		//Output Assigns
-		variables.push({ variableId: 'hdmi1', name: 'HDMI Output 1 Source' })
-		variables.push({ variableId: 'hdmi2', name: 'HDMI Output 2 Source' })
-		variables.push({ variableId: 'hdmi3', name: 'HDMI Output 3 Source' })
-		variables.push({ variableId: 'sdi1', name: 'SDI Output 1 Source' })
-		variables.push({ variableId: 'sdi2', name: 'SDI Output 2 Source' })
-		variables.push({ variableId: 'sdi3', name: 'SDI Output 3 Source' })
-		variables.push({ variableId: 'usb', name: 'USB Output Source' })
-
-		//Aux Assigns
-		variables.push({ variableId: 'aux1', name: 'Aux 1 Source' })
-		variables.push({ variableId: 'aux2', name: 'Aux 2 Source' })
-		variables.push({ variableId: 'aux3', name: 'Aux 3 Source' })
-
-		variables.push({ variableId: 'aux1_mute', name: 'Aux 1 Mute' })
-		variables.push({ variableId: 'aux2_mute', name: 'Aux 2 Mute' })
-		variables.push({ variableId: 'aux3_mute', name: 'Aux 3 Mute' })
-
-		variables.push({ variableId: 'auxlink_mode', name: 'Aux Link Mode' })
-		variables.push({ variableId: 'aux1link', name: 'Aux Link' })
-		variables.push({ variableId: 'aux2link', name: 'Aux Link' })
-		variables.push({ variableId: 'aux3link', name: 'Aux Link' })
-
-		variables.push({ variableId: 'freeze', name: 'Freeze On/Off' })
-
-		//memory names
-		for (let i = 1; i <= 30; i++) {
-			variables.push({ variableId: 'memoryname_' + i, name: 'Memory Name' + i })
+		for (let i = 1; i <= 2; i++) {
+			add(`dsk${i}_source`, `DSK ${i} key source`)
+			add(`dsk${i}_fill`, `DSK ${i} fill source`)
 		}
+		for (let i = 1; i <= 20; i++) add(`input${i}_assign`, `Input ${i} is given`)
 
-		//last memory loaded, number and name
-		variables.push({ variableId: 'lastmemorynumber', name: 'Last Memory Number Loaded' })
-		variables.push({ variableId: 'lastmemoryname', name: 'Last Memory Name Loaded' })
+		add('hdmi1', 'HDMI Output 1 Source')
+		add('hdmi2', 'HDMI Output 2 Source')
+		add('hdmi3', 'HDMI Output 3 Source')
+		add('sdi1', 'SDI Output 1 Source')
+		add('sdi2', 'SDI Output 2 Source')
+		add('sdi3', 'SDI Output 3 Source')
+		add('usb', 'USB Output Source')
 
-		self.setVariableDefinitions(variables)
+		for (let i = 1; i <= 3; i++) {
+			add(`aux${i}_mute`, `Aux ${i} mute`)
+			add(`aux${i}link`, `Aux ${i} linked to PGM`)
+		}
+		add('auxlink_mode', 'Aux link mode')
+		add('freeze', 'Freeze')
+		add('ftb', 'Output fade (firmware 3.40+)')
+
+		for (let i = 1; i <= 30; i++) add(`memoryname_${i}`, `Memory ${i} name`)
+		add('lastmemorynumber', 'Last memory loaded (number)')
+		add('lastmemoryname', 'Last memory loaded (name)')
+
+		this.setVariableDefinitions(v)
 	},
 
 	checkVariables: function () {
 		let self = this
-
 		try {
-			let variableObj = {}
-
-			variableObj.model = self.MODEL
-			variableObj.version = self.VERSION
-
-			for (let i = 0; i < self.TALLYDATA.length; i++) {
-				let state = 'Off'
-
-				if (self.TALLYDATA[i].status == 1 || self.TALLYDATA[i].status == 3) {
-					state = 'Program'
-				} else if (self.TALLYDATA[i].status == 2) {
-					state = 'Preview'
-				}
-
-				variableObj['tally_' + self.TALLYDATA[i].shortlabel] = state
+			const D = self.DATA || {}
+			const v = {
+				model: self.MODEL,
+				version: self.VERSION,
+				protocol: self.PROTOCOL,
+				pgm: label(D.pgmsource),
+				pvw: label(D.pvwsource),
 			}
-
-			//PnP/Keys
-			variableObj.pnpkey1_pgm = self.DATA.data_1B00 == '01' ? 'On' : 'Off'
-			variableObj.pnpkey1_pvw = self.DATA.data_1B01 == '01' ? 'On' : 'Off'
-			variableObj.pnpkey2_pgm = self.DATA.data_1C00 == '01' ? 'On' : 'Off'
-			variableObj.pnpkey2_pvw = self.DATA.data_1C01 == '01' ? 'On' : 'Off'
-			variableObj.pnpkey3_pgm = self.DATA.data_1D00 == '01' ? 'On' : 'Off'
-			variableObj.pnpkey3_pvw = self.DATA.data_1D01 == '01' ? 'On' : 'Off'
-			variableObj.pnpkey4_pgm = self.DATA.data_1E00 == '01' ? 'On' : 'Off'
-			variableObj.pnpkey4_pvw = self.DATA.data_1E01 == '01' ? 'On' : 'Off'
-
-			//pnpkey sources
-			variableObj['pnpkey1_source'] = self.DATA.pnpkey1sourcename
-			variableObj['pnpkey2_source'] = self.DATA.pnpkey2sourcename
-			variableObj['pnpkey3_source'] = self.DATA.pnpkey3sourcename
-			variableObj['pnpkey4_source'] = self.DATA.pnpkey4sourcename
-
-			//Output Assigns
-			let hdmi1assign = self.CHOICES_OUTPUTSASSIGN.find((item) => {
-				return item.id == self.DATA.hdmi1assign
-			})
-			let hdmi2assign = self.CHOICES_OUTPUTSASSIGN.find((item) => {
-				return item.id == self.DATA.hdmi2assign
-			})
-			let hdmi3assign = self.CHOICES_OUTPUTSASSIGN.find((item) => {
-				return item.id == self.DATA.hdmi3assign
-			})
-			let sdi1assign = self.CHOICES_OUTPUTSASSIGN.find((item) => {
-				return item.id == self.DATA.sdi1assign
-			})
-			let sdi2assign = self.CHOICES_OUTPUTSASSIGN.find((item) => {
-				return item.id == self.DATA.sdi2assign
-			})
-			let sdi3assign = self.CHOICES_OUTPUTSASSIGN.find((item) => {
-				return item.id == self.DATA.sdi3assign
-			})
-			let usbassign = self.CHOICES_OUTPUTSASSIGN.find((item) => {
-				return item.id == self.DATA.usbassign
-			})
-
-			if (hdmi1assign !== undefined) {
-				variableObj.hdmi1 = hdmi1assign.label
-			} else {
-				variableObj.hdmi1 = self.DATA.hdmi1assign
+			for (const s of sources.SOURCES) v[`tally_${s.id.toLowerCase()}`] = tallyText((self.TALLY || {})[s.id] || 0)
+			for (let i = 1; i <= 10; i++) v[`tally_xpt${i}`] = v[`tally_input${i}`]
+			for (let i = 1; i <= 3; i++) {
+				v[`aux${i}`] = label(D[`aux${i}source`])
+				v[`aux${i}_mute`] = onOff(D[`aux${i}mute`])
+				v[`aux${i}link`] = onOff(D[`aux${i}link`])
 			}
-
-			if (hdmi2assign !== undefined) {
-				variableObj.hdmi2 = hdmi2assign.label
-			} else {
-				variableObj.hdmi2 = self.DATA.hdmi2assign
+			const pk = ['1B', '1C', '1D', '1E']
+			for (let i = 1; i <= 4; i++) {
+				v[`pnpkey${i}_source`] = label(D[`pnpkey${i}source`])
+				v[`pnpkey${i}_pgm`] = onOff(D[`data_${pk[i - 1]}00`])
+				v[`pnpkey${i}_pvw`] = onOff(D[`data_${pk[i - 1]}01`])
 			}
-
-			if (hdmi3assign !== undefined) {
-				variableObj.hdmi3 = hdmi3assign.label
-			} else {
-				variableObj.hdmi3 = self.DATA.hdmi3assign
+			for (let i = 1; i <= 2; i++) {
+				v[`dsk${i}_source`] = label(D[`dsk${i}source`])
+				v[`dsk${i}_fill`] = label(D[`dsk${i}fill`])
 			}
-
-			if (sdi1assign !== undefined) {
-				variableObj.sdi1 = sdi1assign.label
-			} else {
-				variableObj.sdi1 = self.DATA.sdi1assign
+			for (let i = 1; i <= 20; i++) {
+				v[`input${i}_assign`] = Array.isArray(D.inputAssign) ? label(D.inputAssign[i - 1]) : ''
 			}
-
-			if (sdi2assign !== undefined) {
-				variableObj.sdi2 = sdi2assign.label
-			} else {
-				variableObj.sdi2 = self.DATA.sdi2assign
+			const out = (hex) => (self.CHOICES_OUTPUTSASSIGN.find((x) => x.id == hex) || {}).label ?? hex
+			v.hdmi1 = out(D.hdmi1assign)
+			v.hdmi2 = out(D.hdmi2assign)
+			v.hdmi3 = out(D.hdmi3assign)
+			v.sdi1 = out(D.sdi1assign)
+			v.sdi2 = out(D.sdi2assign)
+			v.sdi3 = out(D.sdi3assign)
+			v.usb = out(D.usbassign)
+			v.auxlink_mode =
+				D.auxlinkmode == '00' ? 'Off' : D.auxlinkmode == '01' ? 'Auto Link' : D.auxlinkmode == '02' ? 'Manual Link' : ''
+			v.freeze = self._freezeValue('freeze') == '01' ? 'On' : 'Off'
+			v.ftb = String(D.ftb || '')
+			for (let i = 0; i < 30; i++) v[`memoryname_${i + 1}`] = D[`memory${i}`] ?? ''
+			if (D.lastMemory !== undefined && Number.isFinite(D.lastMemory)) {
+				v.lastmemorynumber = D.lastMemory + 1
+				v.lastmemoryname = D[`memory${D.lastMemory}`] ?? ''
 			}
-
-			if (sdi3assign !== undefined) {
-				variableObj.sdi3 = sdi3assign.label
-			} else {
-				variableObj.sdi3 = self.DATA.sdi3assign
-			}
-
-			if (usbassign !== undefined) {
-				variableObj.usb = usbassign.label
-			} else {
-				variableObj.usb = self.DATA.usbassign
-			}
-
-			//Aux Sources
-			let aux1source = self.CHOICES_PGMPVW_SELECT.find((item) => {
-				return item.id == self.DATA.aux1source
-			})
-			let aux2source = self.CHOICES_PGMPVW_SELECT.find((item) => {
-				return item.id == self.DATA.aux2source
-			})
-			let aux3source = self.CHOICES_PGMPVW_SELECT.find((item) => {
-				return item.id == self.DATA.aux3source
-			})
-
-			if (aux1source !== undefined) {
-				variableObj.aux1 = aux1source.label
-			} else {
-				variableObj.aux1 = self.DATA.aux1source
-			}
-
-			if (aux2source !== undefined) {
-				variableObj.aux2 = aux2source.label
-			} else {
-				variableObj.aux2 = self.DATA.aux2source
-			}
-
-			if (aux3source !== undefined) {
-				variableObj.aux3 = aux3source.label
-			} else {
-				variableObj.aux3 = self.DATA.aux3source
-			}
-
-			//Aux Mutes
-			variableObj.aux1_mute = self.DATA.aux1mute == '01' ? 'On' : 'Off'
-			variableObj.aux2_mute = self.DATA.aux2mute == '01' ? 'On' : 'Off'
-			variableObj.aux3_mute = self.DATA.aux3mute == '01' ? 'On' : 'Off'
-
-			//Aux Links
-			variableObj.auxlink_mode =
-				self.DATA.auxlinkmode == '00' ? 'Off' : self.DATA.auxlinkmode == '01' ? 'Auto Link' : 'Manual Link'
-			variableObj.aux1link = self.DATA.aux1link == '01' ? 'On' : 'Off'
-			variableObj.aux2link = self.DATA.aux2link == '01' ? 'On' : 'Off'
-			variableObj.aux3link = self.DATA.aux3link == '01' ? 'On' : 'Off'
-
-			//Freeze
-			// Effective value: locally-pending if set, otherwise DATA.freeze.
-			variableObj.freeze = self._freezeValue('freeze') == '01' ? 'On' : 'Off'
-
-			self.setVariableValues(variableObj)
+			self.setVariableValues(v)
 		} catch (error) {
-			self.log('error', 'Error setting Variables from Device: ' + String(error))
+			self.log('error', 'Error setting variables: ' + String(error))
 		}
 	},
 }
