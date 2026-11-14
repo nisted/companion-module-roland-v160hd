@@ -5,12 +5,11 @@ const BUNDLE_NOTICE =
 	"Want to know who else is in the crew, or grab the freshest version of each one? It's all here: " +
 	'<a href="https://github.com/nisted/companion-modules" target="_blank">github.com/nisted/companion-modules</a>'
 
-const BY_ACTION_TIP =
-	"Ticked: this setting belongs to the 'Connection: set settings' action (a button, or a trigger on a variable). " +
-	'The box above locks and shows what the action set. Untick to get back what you had typed before.'
+const CHANGE_BACK_TIP =
+	"A 'Set connection settings' action put this value here. Tick, then Save, to get back what you'd typed before and type it here again."
 
 /**
- * Connection fields that the 'Connection: set settings' action can change.
+ * Connection fields that the 'Set connection settings' action can change.
  * kind: text | int | choice | bool. Ranges are checked before anything is saved.
  */
 const CONN_FIELDS = {
@@ -35,7 +34,7 @@ const PROTOCOL_CHOICES = [
 
 /**
  * Check a value for a connection field. Returns { ok, value } or { ok: false, why }.
- * Used by 'Connection: set settings' (the SOP: impossible values are skipped and logged).
+ * Used by 'Set connection settings' (the SOP: impossible values are skipped and logged).
  */
 function checkField(id, raw) {
 	const f = CONN_FIELDS[id]
@@ -95,25 +94,39 @@ module.exports = {
 			? `Connected to ${self.MODEL || 'V-160HD'}${self.VERSION ? ` (firmware ${self.VERSION})` : ''}, talking ${self.PROTOCOL === 'named' ? 'named commands' : 'low-level address commands'}. All good.`
 			: 'Not connected yet. Fill in the IP address and password, then Save.'
 
-		/** A connection field, its "Can be set by the action" tick, and what it shows while ticked */
+		/**
+		 * A connection field. Once a 'Set connection settings' action has set it, the box is
+		 * hidden and a line shows the value instead, with a 'Change back' tick beside it.
+		 * `<id>_set` is a hidden flag that remembers which fields the action owns.
+		 */
 		const lock = (field) => [
-			{ ...field, isVisibleExpression: `!$(options:${field.id}_byAction)` },
+			{ ...field, isVisibleExpression: `!$(options:${field.id}_set)` },
 			{
 				type: 'static-text',
 				id: `${field.id}_locked`,
 				label: field.label,
-				width: field.width,
-				value: `Set by the 'Connection: set settings' action: ${shownValue(cfg, field.id)}`,
-				isVisibleExpression: `$(options:${field.id}_byAction)`,
+				width: 9,
+				value: `${shownValue(cfg, field.id)} <i>(set by an action)</i>`,
+				isVisibleExpression: `$(options:${field.id}_set)`,
 			},
 			{
 				type: 'checkbox',
-				id: `${field.id}_byAction`,
-				label: 'Can be set by the action',
+				id: `${field.id}_changeBack`,
+				label: 'Change back',
 				width: 3,
 				default: false,
 				disableAutoExpression: true,
-				tooltip: BY_ACTION_TIP,
+				tooltip: CHANGE_BACK_TIP,
+				isVisibleExpression: `$(options:${field.id}_set)`,
+			},
+			{
+				type: 'checkbox',
+				id: `${field.id}_set`,
+				label: 'Set by an action',
+				width: 3,
+				default: false,
+				disableAutoExpression: true,
+				isVisibleExpression: 'false',
 			},
 		]
 
@@ -127,7 +140,7 @@ module.exports = {
 					`${status}<br>` +
 					'On the switcher: <b>MENU → LAN CONTROL</b>, set a 4-digit password (no password, no remote control). ' +
 					'Only one LAN controller at a time: RCS on LAN will knock this off (RCS over USB is fine).' +
-					'<br>Want a button, a trigger or a variable to change a setting? Tick <b>Can be set by the action</b> next to it, then use <b>Connection: set settings</b>.',
+					'<br>Want a button, a trigger or a variable to change a setting? Use the <b>Set connection settings</b> action. Anything it sets shows up here with a <b>Change back</b> tick.',
 			},
 			...lock({
 				type: 'textinput',

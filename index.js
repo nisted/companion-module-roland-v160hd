@@ -96,63 +96,48 @@ class v160Instance extends InstanceBase {
 		const old = this.config || {}
 		const next = { ...newConfig, actionSaved: old.actionSaved }
 		const saved = this._savedValues()
-		let ticksChanged = false
 		for (const f of Object.keys(CONN_FIELDS)) {
-			const was = old[`${f}_byAction`] === true
-			const now = next[`${f}_byAction`] === true
-			if (!was && now) {
-				// Handed to the action: remember what was typed, to put back when unticked
-				saved[f] = next[f]
-				ticksChanged = true
-			} else if (was && now) {
-				// Locked: only the action changes it
-				next[f] = old[f]
-			} else if (was && !now) {
+			const owned = old[`${f}_set`] === true
+			if (owned && next[`${f}_changeBack`] === true) {
+				// Hand it back: what was typed before the action took over
 				if (f in saved) next[f] = saved[f]
 				delete saved[f]
-				ticksChanged = true
+				next[`${f}_set`] = false
+			} else if (owned) {
+				// Still the action's: the page can't change it
+				next[f] = old[f]
+				next[`${f}_set`] = true
+			} else {
+				next[`${f}_set`] = false
 			}
+			next[`${f}_changeBack`] = false
 		}
 		next.actionSaved = JSON.stringify(saved)
 		this.config = next
-		if (ticksChanged) this.initActions()
 		this._buildDefinitions()
 		this.initConnection()
 		const keys = new Set([...Object.keys(newConfig), ...Object.keys(next)])
 		if ([...keys].some((k) => JSON.stringify(newConfig[k]) !== JSON.stringify(next[k]))) this.saveConfig(next)
 	}
 
-	/** The fields ticked "Can be set by the action" */
-	_tickedFields() {
-		return Object.keys(CONN_FIELDS).filter((f) => this.config?.[`${f}_byAction`] === true)
-	}
-
-	/** 'Connection: set settings': write the given values into the ticked fields, then reconnect */
+	/** 'Set connection settings': any field, blank = leave alone, impossible values skipped and logged */
 	async setSettingsByAction(options) {
-		const ticked = this._tickedFields()
-		if (!ticked.length) {
-			this.log(
-				'info',
-				'Connection: set settings: nothing\'s ticked "Can be set by the action" on the connection page yet, so there\'s nothing for me to set.',
-			)
-			return
-		}
 		const next = { ...this.config }
+		const saved = this._savedValues()
 		let changed = false
 		for (const f of Object.keys(CONN_FIELDS)) {
 			const raw = options[f]
 			if (raw === undefined || raw === null || String(raw).trim() === '') continue
-			if (!ticked.includes(f)) {
-				this.log(
-					'info',
-					`Connection: set settings: "${CONN_FIELDS[f].label}" isn't ticked "Can be set by the action", so I've left it alone.`,
-				)
-				continue
-			}
 			const r = checkField(f, raw)
 			if (!r.ok) {
-				this.log('warn', `Connection: set settings: "${CONN_FIELDS[f].label}" ${r.why}. Left it as it was.`)
+				this.log('warn', `Set connection settings: "${CONN_FIELDS[f].label}" ${r.why}. Left it as it was.`)
 				continue
+			}
+			if (next[`${f}_set`] !== true) {
+				// First time the action takes this field: keep what was typed, for Change back
+				saved[f] = next[f]
+				next[`${f}_set`] = true
+				changed = true
 			}
 			if (JSON.stringify(next[f]) !== JSON.stringify(r.value)) {
 				next[f] = r.value
@@ -160,6 +145,7 @@ class v160Instance extends InstanceBase {
 			}
 		}
 		if (!changed) return
+		next.actionSaved = JSON.stringify(saved)
 		this.config = next
 		this.saveConfig(next)
 		this._buildDefinitions()

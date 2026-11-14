@@ -193,9 +193,8 @@ function extraActions(self, actions) {
 		},
 	}
 
-	// Connection: set settings (only the fields ticked "Can be set by the action")
-	const ticked = typeof self._tickedFields === 'function' ? self._tickedFields() : []
-	const settingOptions = ticked.map((f) => {
+	// Set connection settings: every field, blank = leave as is
+	const settingOptions = Object.keys(CONN_FIELDS).map((f) => {
 		const def = CONN_FIELDS[f]
 		let tip = ''
 		if (def.kind === 'int') tip = `A whole number from ${def.min} to ${def.max}.`
@@ -211,20 +210,10 @@ function extraActions(self, actions) {
 		}
 	})
 	actions.set_settings = {
-		name: 'Connection: set settings',
+		name: 'Set connection settings',
 		description:
-			'Changes this connection\'s settings, for the fields ticked "Can be set by the action" on the connection page. Blank = leave as is. Put it in a trigger on "variable changed" to drive the connection from a variable.',
-		options: settingOptions.length
-			? settingOptions
-			: [
-					{
-						type: 'static-text',
-						id: 'none',
-						label: 'Nothing to set yet',
-						value:
-							'Tick "Can be set by the action" next to a field on this connection\'s settings page first. Then it turns up here, ready to set.',
-					},
-				],
+			"Changes this connection's settings. Fill in only what you want to change; blank = leave as is. Anything set here shows on the connection page with a 'Change back' tick. Put it in a trigger on \"variable changed\" to drive the connection from a variable.",
+		options: settingOptions,
 		callback: (a) => self.setSettingsByAction(a.options),
 	}
 }

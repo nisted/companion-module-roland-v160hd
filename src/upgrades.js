@@ -147,6 +147,23 @@ function upgradeRebelConfig(_context, props) {
 	return { updatedConfig: next, updatedActions: [], updatedFeedbacks: [] }
 }
 
+/** 'Can be set by the action' ticks -> 'set by an action' flags (new Set connection settings pattern) */
+function upgradeSetByAction(_context, props) {
+	const c = props.config
+	if (!c) return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
+	const next = { ...c }
+	let changed = false
+	for (const k of Object.keys(c)) {
+		const m = /^(.+)_byAction$/.exec(k)
+		if (!m) continue
+		// A ticked field was the action's: keep it that way (its typed value is already in actionSaved)
+		if (c[k] === true) next[`${m[1]}_set`] = true
+		delete next[k]
+		changed = true
+	}
+	return { updatedConfig: changed ? next : null, updatedActions: [], updatedFeedbacks: [] }
+}
+
 module.exports = [
 	function () {
 		return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
@@ -169,8 +186,10 @@ module.exports = [
 	},
 	upgradeToRebelRouting,
 	upgradeRebelConfig,
+	upgradeSetByAction,
 ]
 
 module.exports.upgradeToRebelRouting = upgradeToRebelRouting
 module.exports.upgradeRebelConfig = upgradeRebelConfig
+module.exports.upgradeSetByAction = upgradeSetByAction
 module.exports._test = { get, set, tokenFromHex, tokenFromNum }

@@ -26,7 +26,9 @@ This is a rebel version of the community V-160HD module (thanks, Joseph Adams an
 | Answer timeout / Gap / Resends / Pause polling after | Fine tuning for the command queue. Leave them unless something's up.                                                                                        |
 | Chatty log                                           | Everything sent and received, in the log.                                                                                                                   |
 
-Every setting has a **Can be set by the action** tick. Tick it and the **Connection: set settings** action can change that setting from a button or a trigger on a variable. Impossible values (port 99999, an IP that isn't one) are skipped and logged, never saved. Untick to get back what you'd typed before.
+**Set connection settings** (an action) can change any of these from a button, or from a trigger on a variable. Fill in only what you want to change; blank means leave it. Impossible values (port 99999, an IP that isn't one) are skipped and logged, never saved.
+
+Anything the action has set shows on this page as its value, marked _set by an action_, instead of the usual box. Want it back to normal? Tick **Change back** next to it and Save: you get back what you'd typed before, and the box is yours again.
 
 ## Why "named" commands matter (firmware 3.40+)
 

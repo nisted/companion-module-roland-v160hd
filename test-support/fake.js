@@ -53,7 +53,6 @@ function makeFake(cfg = {}) {
 		saveConfig(c) {
 			self.savedConfig = c
 		},
-		_tickedFields: () => [],
 		setSettingsByAction() {},
 	}
 	// A queue that just records what would go on the wire, answering nothing

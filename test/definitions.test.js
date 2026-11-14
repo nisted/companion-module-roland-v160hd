@@ -57,18 +57,32 @@ test('variables are an object, and checkVariables fills them without throwing', 
 	for (const k of Object.keys(self.variableValues)) assert.ok(k in self.variableDefs, `${k} is defined`)
 })
 
-test('connection page: every input field has a tooltip and a lock tick', () => {
+test('connection page: every input field has a tooltip, a Change back tick and a hidden set flag', () => {
 	const { self } = makeFake()
 	const fields = self.getConfigFields()
-	const inputs = fields.filter((f) => f.type !== 'static-text' && !f.id.endsWith('_byAction'))
+	const inputs = fields.filter((f) => f.type !== 'static-text' && !/_(set|changeBack)$/.test(f.id))
 	for (const f of inputs) {
 		assert.ok(f.tooltip, `${f.id} tooltip`)
+		assert.equal(f.isVisibleExpression, `!$(options:${f.id}_set)`)
 		assert.ok(
-			fields.some((x) => x.id === `${f.id}_byAction`),
-			`${f.id} lock`,
+			fields.some((x) => x.id === `${f.id}_changeBack` && x.label === 'Change back'),
+			`${f.id} change back`,
+		)
+		assert.ok(
+			fields.some((x) => x.id === `${f.id}_set` && x.isVisibleExpression === 'false'),
+			`${f.id} hidden flag`,
 		)
 	}
+	assert.equal(fields.filter((f) => /_byAction$/.test(f.id)).length, 0, 'no old ticks')
 	assert.ok(fields.some((f) => f.label && f.label.includes("Psst. This one's got mates")))
+})
+
+test('Set connection settings offers every connection field', () => {
+	const self = build()
+	const a = self.actionDefs.set_settings
+	assert.equal(a.name, 'Set connection settings')
+	const { CONN_FIELDS } = require('../src/config')
+	assert.deepEqual(a.options.map((o) => o.id).sort(), Object.keys(CONN_FIELDS).sort())
 })
 
 test('the source feedback treats an input and its HDMI as the same picture', () => {
