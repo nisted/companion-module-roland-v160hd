@@ -1,5 +1,7 @@
 'use strict'
 
+const { NAMING_CHOICES, BUTTON_TEXT_CHOICES } = require('./labels')
+
 const BUNDLE_NOTICE =
 	'V-160HD Rebel is part of a little crew of Companion modules: some brand new, some old favourites given a good tweak. ' +
 	"Want to know who else is in the crew, or grab the freshest version of each one? It's all here: " +
@@ -24,7 +26,33 @@ const CONN_FIELDS = {
 	retries: { label: 'Resends if unanswered', kind: 'int', min: 0, max: 5 },
 	silence: { label: 'Pause polling after (missed answers)', kind: 'int', min: 1, max: 100 },
 	verbose: { label: 'Chatty log', kind: 'bool' },
+	labelrefresh: { label: 'Label refresh when polling is off (seconds, 0 = off)', kind: 'int', min: 0, max: 3600 },
+	inputNaming: { label: 'Call input slots', kind: 'choice', choices: ['xpt', 'input'] },
+	buttonText: { label: 'Preset button text', kind: 'choice', choices: ['labelonly', 'labelinput', 'full'] },
+	allowSystem: { label: 'Allow system settings', kind: 'bool' },
+	allowRisky: { label: 'Allow risky system settings', kind: 'bool' },
+	confirmSecs: { label: 'Second press within (seconds)', kind: 'int', min: 1, max: 30 },
+	tallyBorder: { label: 'Tally: PGM + PVW border width', kind: 'int', min: 0, max: 20 },
 }
+// Tally look colours and which sources show each group
+for (const [k, name] of Object.entries({
+	pgm: 'PGM fill',
+	pvw: 'PVW fill',
+	border: 'PGM + PVW border',
+	pinp: 'PinP markers',
+	key: 'Key markers',
+	dsk: 'DSK markers',
+	aux: 'Aux markers',
+}))
+	CONN_FIELDS[`tallyColour_${k}`] = { label: `Tally colour: ${name}`, kind: 'colour' }
+for (const [g, name] of Object.entries({
+	main: 'PGM/PVW colours',
+	pinp: 'PinP markers',
+	key: 'Key markers',
+	dsk: 'DSK markers',
+	aux: 'Aux markers',
+}))
+	CONN_FIELDS[`tallyShow_${g}`] = { label: `Show ${name} on`, kind: 'list' }
 
 const PROTOCOL_CHOICES = [
 	{ id: 'auto', label: 'Auto (ask the switcher, 3.40+ = named)' },
@@ -58,7 +86,27 @@ function checkField(id, raw) {
 		case 'choice': {
 			const lc = v.toLowerCase().replace(/[\s-]/g, '')
 			if (!f.choices.includes(lc)) return { ok: false, why: `needs one of ${f.choices.join(', ')}, and "${v}" isn't` }
-			return { ok: true, value: lc }
+			const camel = { labelonly: 'labelOnly', labelinput: 'labelInput' }
+			return { ok: true, value: camel[lc] || lc }
+		}
+		case 'colour': {
+			const m = /^#?([0-9a-f]{6})$/i.exec(v)
+			if (m) return { ok: true, value: parseInt(m[1], 16) }
+			if (/^\d+$/.test(v) && Number(v) <= 0xffffff) return { ok: true, value: Number(v) }
+			return { ok: false, why: `needs a colour like #FF0000, and "${v}" isn't one` }
+		}
+		case 'list': {
+			const sources = require('./sources')
+			const ids = v
+				.split(/[,;\s]+/)
+				.filter(Boolean)
+				.map((x) => sources.resolveSource(x))
+			if (ids.some((x) => !x))
+				return {
+					ok: false,
+					why: `needs sources like INPUT1, HDMI3, STILL2 (comma separated), and "${v}" has one I don't know`,
+				}
+			return { ok: true, value: ids.map((x) => x.id) }
 		}
 		case 'bool': {
 			const lc = v.toLowerCase()
@@ -76,7 +124,18 @@ function shownValue(config, id) {
 	const v = config ? config[id] : undefined
 	if (id === 'password') return String(v ?? '') ? '•••• (hidden)' : 'blank'
 	if (typeof v === 'boolean') return v ? 'on' : 'off'
+	if (/^tallyColour_/.test(id))
+		return (
+			'#' +
+			Number(v ?? 0)
+				.toString(16)
+				.padStart(6, '0')
+				.toUpperCase()
+		)
+	if (Array.isArray(v)) return v.length ? v.join(', ') : 'none'
 	if (id === 'protocol') return (PROTOCOL_CHOICES.find((c) => c.id === v) || {}).label || String(v ?? '')
+	if (id === 'inputNaming') return v === 'input' ? 'Input' : 'XPT'
+	if (id === 'buttonText') return { labelInput: 'Label + input', full: 'Full' }[v] || 'Label only'
 	const s = String(v ?? '').trim()
 	return s || 'blank (so the default)'
 }
@@ -100,7 +159,13 @@ module.exports = {
 		 * `<id>_set` is a hidden flag that remembers which fields the action owns.
 		 */
 		const lock = (field) => [
-			{ ...field, isVisibleExpression: `!$(options:${field.id}_set)` },
+			{
+				...field,
+				// Keep the field's own show/hide rule too (e.g. polling rate only with polling on)
+				isVisibleExpression: field.isVisibleExpression
+					? `(${field.isVisibleExpression}) && !$(options:${field.id}_set)`
+					: `!$(options:${field.id}_set)`,
+			},
 			{
 				type: 'static-text',
 				id: `${field.id}_locked`,
@@ -239,6 +304,81 @@ module.exports = {
 				tooltip:
 					'After this many unanswered commands in a row, polling takes a breather until the switcher speaks again. (1 to 100)',
 			}),
+			{
+				type: 'static-text',
+				id: 'namesHead',
+				label: 'Labels and names',
+				width: 12,
+				value: '',
+			},
+			...lock({
+				type: 'dropdown',
+				id: 'inputNaming',
+				label: CONN_FIELDS.inputNaming.label,
+				width: 9,
+				default: 'xpt',
+				choices: NAMING_CHOICES,
+				tooltip: 'XPT 1 - GFX-B (HDMI 3), or Input 1 - GFX-B (HDMI 3). Used everywhere the module names an input slot.',
+			}),
+			...lock({
+				type: 'dropdown',
+				id: 'buttonText',
+				label: CONN_FIELDS.buttonText.label,
+				width: 9,
+				default: 'labelOnly',
+				choices: BUTTON_TEXT_CHOICES,
+				tooltip:
+					'What the source presets show. No label? It falls back to the default name (HDMI 3), then the slot (XPT 1). Also the $(…:name_…) variables.',
+			}),
+			...lock({
+				type: 'textinput',
+				id: 'labelrefresh',
+				label: CONN_FIELDS.labelrefresh.label,
+				width: 9,
+				default: '30',
+				isVisibleExpression: '!$(options:polling)',
+				tooltip:
+					'With polling off, read the labels this often in case someone changes them on the panel. With polling on they come in with polling. (0 to 3600, 0 = only on connect and after a set)',
+			}),
+			{
+				type: 'static-text',
+				id: 'systemHead',
+				label: 'System settings',
+				width: 12,
+				value: '',
+			},
+			...lock({
+				type: 'checkbox',
+				id: 'allowSystem',
+				label: CONN_FIELDS.allowSystem.label,
+				width: 9,
+				default: true,
+				disableAutoExpression: true,
+				tooltip:
+					"Actions and presets for the switcher's MENU → SYSTEM settings (Monitor SW, test pattern, multi-view, panel lock and more).",
+			}),
+			...lock({
+				type: 'checkbox',
+				id: 'allowRisky',
+				label: CONN_FIELDS.allowRisky.label,
+				width: 9,
+				default: false,
+				disableAutoExpression: true,
+				isVisibleExpression: '$(options:allowSystem)',
+				tooltip:
+					'The ones that can take the output off air: frame rate, system format, output formats, HDCP, reference. Their actions say ⚠ RISKY, their presets have a hazard border, and they need a second press.',
+			}),
+			...lock({
+				type: 'textinput',
+				id: 'confirmSecs',
+				label: CONN_FIELDS.confirmSecs.label,
+				width: 9,
+				default: '5',
+				tooltip:
+					'Risky actions and snapshot restores with risky settings want a second press inside this time. (1 to 30)',
+			}),
+			...self.tallyConfigFields(lock),
+			...self.snapshotConfigFields(),
 			...lock({
 				type: 'checkbox',
 				id: 'verbose',

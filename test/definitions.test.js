@@ -20,7 +20,7 @@ test('every preset uses actions and feedbacks that exist, with valid choices', (
 		for (const [k, v] of Object.entries(opts)) {
 			const o = def.options.find((x) => x.id === k)
 			assert.ok(o, `${kind} ${id} has option ${k}`)
-			if (o.type === 'dropdown')
+			if (o.type === 'dropdown' && !o.allowCustom)
 				assert.ok(
 					o.choices.some((c) => c.id === v),
 					`${kind} ${id}.${k} = ${v} is a choice`,
@@ -28,12 +28,13 @@ test('every preset uses actions and feedbacks that exist, with valid choices', (
 		}
 	}
 	let n = 0
-	for (const p of Object.values(self.presetDefs)) {
+	const flat = Object.values(self.presetDefs).flatMap((p) => (p.type === 'alternatives' ? p.variants : [p]))
+	for (const p of flat) {
 		for (const step of p.steps)
 			for (const a of [...step.down, ...step.up]) check(self.actionDefs, a.actionId, a.options, 'action')
 		for (const f of p.feedbacks) check(self.feedbackDefs, f.feedbackId, f.options, 'feedback')
-		n++
 	}
+	n = Object.keys(self.presetDefs).length
 	assert.ok(n > 300, `${n} presets`)
 	const listed = self.presetStructure.flatMap((s) => s.definitions)
 	assert.equal(listed.length, n)
@@ -60,10 +61,13 @@ test('variables are an object, and checkVariables fills them without throwing', 
 test('connection page: every input field has a tooltip, a Change back tick and a hidden set flag', () => {
 	const { self } = makeFake()
 	const fields = self.getConfigFields()
-	const inputs = fields.filter((f) => f.type !== 'static-text' && !/_(set|changeBack)$/.test(f.id))
+	// Snapshot picks are one-shot page commands (restore/rename/delete), not settings
+	const inputs = fields.filter(
+		(f) => f.type !== 'static-text' && !/_(set|changeBack)$/.test(f.id) && !/^snap/.test(f.id),
+	)
 	for (const f of inputs) {
 		assert.ok(f.tooltip, `${f.id} tooltip`)
-		assert.equal(f.isVisibleExpression, `!$(options:${f.id}_set)`)
+		assert.ok(f.isVisibleExpression.endsWith(`!$(options:${f.id}_set)`), `${f.id} hides when set by an action`)
 		assert.ok(
 			fields.some((x) => x.id === `${f.id}_changeBack` && x.label === 'Change back'),
 			`${f.id} change back`,

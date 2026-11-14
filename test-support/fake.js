@@ -8,6 +8,10 @@ const variables = require('../src/variables')
 const presets = require('../src/presets')
 const api = require('../src/api')
 const constants = require('../src/constants')
+const labels = require('../src/labels')
+const system = require('../src/system')
+const tally = require('../src/tally')
+const snapshots = require('../src/snapshots')
 const { CommandQueue } = require('../src/commandQueue')
 
 function makeFake(cfg = {}) {
@@ -21,6 +25,11 @@ function makeFake(cfg = {}) {
 		...presets,
 		...api,
 		...constants,
+		...labels,
+		...system,
+		...tally,
+		...snapshots,
+		MEM: {},
 		label: 'v160',
 		config: { host: '10.0.0.1', password: '1234', protocol: 'auto', polling: true, ...cfg },
 		DATA: {},
@@ -49,6 +58,12 @@ function makeFake(cfg = {}) {
 			self.presetDefs = defs
 		},
 		checkFeedbacks() {},
+		_buildDefinitions() {
+			self.initActions()
+			self.initFeedbacks()
+			self.initVariables()
+			self.initPresets()
+		},
 		checkAllFeedbacks() {},
 		saveConfig(c) {
 			self.savedConfig = c

@@ -5,7 +5,7 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const net = require('node:net')
 
-function fakeSwitcher(version, { refuse = [] } = {}) {
+function fakeSwitcher(version, { refuse = [], bytes = {} } = {}) {
 	const got = []
 	const server = net.createServer((sock) => {
 		let buf = ''
@@ -46,7 +46,13 @@ function fakeSwitcher(version, { refuse = [] } = {}) {
 		if (line === 'QPST') return 'PST:SDI1;ACK;'
 		if (/^Q/.test(line)) return 'ACK;'
 		const rq = /^RQH:(\w{6}),(\w{6})$/.exec(line)
-		if (rq) return `DTH:${rq[1]},${'00'.repeat(parseInt(rq[2], 16))};`
+		if (rq) {
+			// Known bytes (by address), zero for the rest
+			const mem = require('../src/mem')
+			let out = ''
+			for (let i = 0; i < parseInt(rq[2], 16); i++) out += bytes[mem.addAddr(rq[1], i)] ?? '00'
+			return `DTH:${rq[1]},${out};`
+		}
 		return 'ACK;'
 	}
 	return new Promise((resolve) =>
@@ -169,7 +175,7 @@ test('polling on: answers fill feedback data, nothing piles up', async () => {
 	const { w, seen } = await boot(sw.port, { polling: true, pollingrate: '100' })
 	try {
 		await wait(1200)
-		assert.equal(seen.values.pgm, 'Input 3')
+		assert.equal(seen.values.pgm, 'XPT 3 - HDMI 1')
 		assert.equal(seen.values.pvw, 'SDI 1')
 		assert.equal(seen.values.tally_input3, 'Program')
 		// Button presses still land promptly while polling runs
@@ -177,6 +183,34 @@ test('polling on: answers fill feedback data, nothing piles up', async () => {
 		await run(w, 'select_pvw', { source: 'INPUT9' })
 		await wait(150)
 		assert.ok(sw.got.slice(before).includes('PST:INPUT9'))
+	} finally {
+		await w.destroy()
+		sw.server.close()
+	}
+})
+
+test('labels and system settings come through the real host: variables, names, actions', async () => {
+	const lbl = Buffer.from('GFX-B').toString('hex').toUpperCase().match(/../g)
+	const bytes = { '020116': '07', '000000': '02' }
+	lbl.forEach((b, i) => (bytes['02120' + i] = b))
+	const sw = await fakeSwitcher('3.60', { bytes })
+	const { w, seen } = await boot(sw.port, { polling: false })
+	try {
+		await wait(2500)
+		assert.equal(seen.values.label_hdmi3, 'GFX-B')
+		assert.equal(seen.values.sys_monitor1, 'Aux 1')
+		assert.equal(seen.values.fullname_input1, 'XPT 1 - GFX-B (HDMI 3)')
+		assert.equal(seen.values.name_input1, 'GFX-B')
+		await run(w, 'label_set', { target: 'HDMI4', text: 'CAM 2' })
+		await run(w, 'system_test', { setting: 'test_pattern', v_test_pattern: '1' })
+		await wait(300)
+		assert.ok(sw.got.includes('DTH:021300,43414D2032000000'), sw.got.filter((c) => c.startsWith('DTH')).join(' '))
+		assert.ok(sw.got.includes('DTH:02012E,01'))
+		// Dropdowns pick up the label (rebuilt shortly after it changes)
+		await wait(1500)
+		const opt = seen.actions.find((a) => a.id === 'select_pgm' || a.actionId === 'select_pgm')
+		const choices = JSON.stringify(opt || seen.actions)
+		assert.ok(choices.includes('XPT 1 - GFX-B (HDMI 3)'))
 	} finally {
 		await w.destroy()
 		sw.server.close()

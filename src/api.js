@@ -3,6 +3,7 @@ const { extractMessages } = require('./tcpParser')
 const { CommandQueue } = require('./commandQueue')
 const protocol = require('./protocol')
 const sources = require('./sources')
+const mem = require('./mem')
 
 // How long a Freeze field's local pending value (set optimistically by a
 // write action, before the device has confirmed it) is shown before falling
@@ -35,6 +36,7 @@ module.exports = {
 		let self = this
 
 		self._stopPolling()
+		if (typeof self.stopLabelRefresh === 'function') self.stopLabelRefresh()
 		if (self._queue) self._queue.clear()
 
 		const s = self._settings()
@@ -190,6 +192,14 @@ module.exports = {
 		self.subscribeToTally()
 		self.getFreezeData()
 		self.startInterval()
+		// Names, system settings and the tally extras, once on connect
+		self.readLabels()
+		self.getVideoAssign()
+		self.readSystem()
+		self.readLayerTypes()
+		self.readDskOnAir()
+		self.startLabelRefresh()
+		self.runPendingRestore()
 	},
 
 	// ── Polling ────────────────────────────────────────────────────────────
@@ -234,6 +244,7 @@ module.exports = {
 			self.getAuxSources()
 		}
 		self.getPinpKeyTally()
+		self.readDskOnAir()
 
 		if (immediate || self._pollTick % 2 === 0) {
 			self.getAuxMutes()
@@ -248,6 +259,12 @@ module.exports = {
 			self.getTransitionData()
 			self.getMonitorData()
 			self.getLastMemoryLoaded()
+			self.readLayerTypes()
+		}
+		// Labels and system settings: slowest tier (they rarely change from the panel)
+		if (!immediate && self._pollTick % 20 === 0) {
+			self.readLabels()
+			self.readSystem()
 		}
 	},
 
@@ -295,7 +312,6 @@ module.exports = {
 	getDskSource: function () {
 		if (this.PROTOCOL === 'named') {
 			for (let k = 1; k <= 2; k++) this._read(`QDSS:DSK${k};`, 'DSS')
-			return
 		}
 		// DSK 1 + 2 key source and fill source
 		this.sendRawCommand('RQH:001F03,000002;')
@@ -441,6 +457,8 @@ module.exports = {
 				const body = msg.slice(4)
 				const [addr, value] = body.split(',')
 				if (addr && addr.length === 6 && value !== undefined) {
+					if (!self.MEM) self.MEM = {}
+					mem.capture(self.MEM, addr, value.trim())
 					self._handleDTH(
 						addr.slice(0, 2).toUpperCase(),
 						addr.slice(2, 4).toUpperCase(),
@@ -453,6 +471,7 @@ module.exports = {
 				changed = self._handleNamed(msg)
 			}
 			if (changed) {
+				if (typeof self._labelsChanged === 'function') self._labelsChanged()
 				self.checkAllFeedbacks()
 				self.checkVariables()
 				if (before) self._recordChanges(before)

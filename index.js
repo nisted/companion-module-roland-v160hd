@@ -9,6 +9,11 @@ const variables = require('./src/variables')
 const presets = require('./src/presets')
 const api = require('./src/api')
 const constants = require('./src/constants')
+const labels = require('./src/labels')
+const system = require('./src/system')
+const tally = require('./src/tally')
+const snapshots = require('./src/snapshots')
+const sources = require('./src/sources')
 
 const { CONN_FIELDS, checkField } = config
 
@@ -24,7 +29,12 @@ class v160Instance extends InstanceBase {
 			...presets,
 			...api,
 			...constants,
+			...labels,
+			...system,
+			...tally,
+			...snapshots,
 		})
+		this.MEM = {}
 
 		this.INTERVAL = undefined
 		this.MODEL = 'V-160HD'
@@ -49,6 +59,7 @@ class v160Instance extends InstanceBase {
 
 	async init(config) {
 		this.config = config
+		sources.useNamer((id) => this.sourceName(id, 'full'))
 		this._buildDefinitions()
 		this.initConnection()
 	}
@@ -59,6 +70,9 @@ class v160Instance extends InstanceBase {
 			clearTimeout(this._verTimer)
 			if (this._queue) this._queue.clear()
 			this._clearAllFreezePending()
+			this.stopLabelRefresh()
+			this.stopConfirm()
+			this.stopSnapshots()
 			if (this.socket !== undefined) {
 				this.socket.destroy()
 				delete this.socket
@@ -94,7 +108,8 @@ class v160Instance extends InstanceBase {
 
 	async configUpdated(newConfig) {
 		const old = this.config || {}
-		const next = { ...newConfig, actionSaved: old.actionSaved }
+		// Kept by the module, not typed on the page: carry them over
+		const next = { ...newConfig, actionSaved: old.actionSaved, snapshots: old.snapshots }
 		const saved = this._savedValues()
 		for (const f of Object.keys(CONN_FIELDS)) {
 			const owned = old[`${f}_set`] === true
@@ -113,6 +128,8 @@ class v160Instance extends InstanceBase {
 			next[`${f}_changeBack`] = false
 		}
 		next.actionSaved = JSON.stringify(saved)
+		this.config = next
+		this.takeSnapshotConfigOps(next)
 		this.config = next
 		this._buildDefinitions()
 		this.initConnection()

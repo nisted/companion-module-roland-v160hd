@@ -315,6 +315,9 @@ module.exports = {
 		}
 
 		sourceFeedbacks(self, feedbacks)
+		self.labelFeedbacks(feedbacks)
+		self.systemFeedbacks(feedbacks)
+		self.tallyFeedbacks(feedbacks)
 		self.setFeedbackDefinitions(feedbacks)
 	},
 }

@@ -2,7 +2,11 @@
 
 const sources = require('./sources')
 
-const label = (hex) => sources.sourceFromHex(hex)?.label ?? ''
+/** Full name for a source the switcher reported: XPT 1 - GFX-B (HDMI 3) */
+const named = (self, hex) => {
+	const s = sources.sourceFromHex(hex)
+	return s ? self.sourceName(s.id, 'full') : ''
+}
 const onOff = (v) => (v == '01' ? 'On' : 'Off')
 const tallyText = (st) => (st & 0x01 ? 'Program' : st & 0x02 ? 'Preview' : 'Off')
 
@@ -52,6 +56,9 @@ module.exports = {
 		for (let i = 1; i <= 30; i++) add(`memoryname_${i}`, `Memory ${i} name`)
 		add('lastmemorynumber', 'Last memory loaded (number)')
 		add('lastmemoryname', 'Last memory loaded (name)')
+		this.labelVariableDefs(add)
+		this.systemVariableDefs(add)
+		this.snapshotVariableDefs(add)
 
 		this.setVariableDefinitions(v)
 	},
@@ -64,28 +71,28 @@ module.exports = {
 				model: self.MODEL,
 				version: self.VERSION,
 				protocol: self.PROTOCOL,
-				pgm: label(D.pgmsource),
-				pvw: label(D.pvwsource),
+				pgm: named(self, D.pgmsource),
+				pvw: named(self, D.pvwsource),
 			}
 			for (const s of sources.SOURCES) v[`tally_${s.id.toLowerCase()}`] = tallyText((self.TALLY || {})[s.id] || 0)
 			for (let i = 1; i <= 10; i++) v[`tally_xpt${i}`] = v[`tally_input${i}`]
 			for (let i = 1; i <= 3; i++) {
-				v[`aux${i}`] = label(D[`aux${i}source`])
+				v[`aux${i}`] = named(self, D[`aux${i}source`])
 				v[`aux${i}_mute`] = onOff(D[`aux${i}mute`])
 				v[`aux${i}link`] = onOff(D[`aux${i}link`])
 			}
 			const pk = ['1B', '1C', '1D', '1E']
 			for (let i = 1; i <= 4; i++) {
-				v[`pnpkey${i}_source`] = label(D[`pnpkey${i}source`])
+				v[`pnpkey${i}_source`] = named(self, D[`pnpkey${i}source`])
 				v[`pnpkey${i}_pgm`] = onOff(D[`data_${pk[i - 1]}00`])
 				v[`pnpkey${i}_pvw`] = onOff(D[`data_${pk[i - 1]}01`])
 			}
 			for (let i = 1; i <= 2; i++) {
-				v[`dsk${i}_source`] = label(D[`dsk${i}source`])
-				v[`dsk${i}_fill`] = label(D[`dsk${i}fill`])
+				v[`dsk${i}_source`] = named(self, D[`dsk${i}source`])
+				v[`dsk${i}_fill`] = named(self, D[`dsk${i}fill`])
 			}
 			for (let i = 1; i <= 20; i++) {
-				v[`input${i}_assign`] = Array.isArray(D.inputAssign) ? label(D.inputAssign[i - 1]) : ''
+				v[`input${i}_assign`] = Array.isArray(D.inputAssign) ? named(self, D.inputAssign[i - 1]) : ''
 			}
 			const out = (hex) => (self.CHOICES_OUTPUTSASSIGN.find((x) => x.id == hex) || {}).label ?? hex
 			v.hdmi1 = out(D.hdmi1assign)
@@ -104,6 +111,9 @@ module.exports = {
 				v.lastmemorynumber = D.lastMemory + 1
 				v.lastmemoryname = D[`memory${D.lastMemory}`] ?? ''
 			}
+			self.labelVariableValues(v)
+			self.systemVariableValues(v)
+			self.snapshotVariableValues(v)
 			self.setVariableValues(v)
 		} catch (error) {
 			self.log('error', 'Error setting variables: ' + String(error))

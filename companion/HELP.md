@@ -15,16 +15,24 @@ This is a rebel version of the community V-160HD module (thanks, Joseph Adams an
 
 ## Connection settings
 
-| Setting                                              | What it does                                                                                                                                                |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Switcher IP address                                  | Where the V-160HD lives.                                                                                                                                    |
-| Port                                                 | 8023. Leave it unless you know better.                                                                                                                      |
-| LAN control password                                 | The 4 digits from MENU → LAN CONTROL.                                                                                                                       |
-| Command set                                          | **Auto** (default) asks the switcher its firmware: 3.40+ gets Roland's named commands, older gets the low-level address commands. Force either if you like. |
-| Polling                                              | Keeps feedbacks and variables in step with the panel. Now polite: one question at a time, never piling up.                                                  |
-| Polling every (ms)                                   | How often. A round is skipped while the last is unanswered, so you can't swamp it.                                                                          |
-| Answer timeout / Gap / Resends / Pause polling after | Fine tuning for the command queue. Leave them unless something's up.                                                                                        |
-| Chatty log                                           | Everything sent and received, in the log.                                                                                                                   |
+| Setting                                              | What it does                                                                                                                                                    |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Switcher IP address                                  | Where the V-160HD lives.                                                                                                                                        |
+| Port                                                 | 8023. Leave it unless you know better.                                                                                                                          |
+| LAN control password                                 | The 4 digits from MENU → LAN CONTROL.                                                                                                                           |
+| Command set                                          | **Auto** (default) asks the switcher its firmware: 3.40+ gets Roland's named commands, older gets the low-level address commands. Force either if you like.     |
+| Polling                                              | Keeps feedbacks and variables in step with the panel. Now polite: one question at a time, never piling up.                                                      |
+| Polling every (ms)                                   | How often. A round is skipped while the last is unanswered, so you can't swamp it.                                                                              |
+| Answer timeout / Gap / Resends / Pause polling after | Fine tuning for the command queue. Leave them unless something's up.                                                                                            |
+| Call input slots                                     | **XPT** (default) or **Input**: `XPT 1 - GFX-B (HDMI 3)` or `Input 1 - GFX-B (HDMI 3)`, everywhere the module names a slot.                                     |
+| Preset button text                                   | **Label only** (default, `GFX-B`), **Label + input** (`XPT 1 / GFX-B`) or **Full** (`XPT 1 - GFX-B (HDMI 3)`).                                                  |
+| Label refresh when polling is off                    | Only shows with polling off. Reads the labels every so often (30 s to start) in case someone changes them on the panel. With polling on they come with polling. |
+| Allow system settings                                | On to start. Actions and presets for MENU → SYSTEM and friends.                                                                                                 |
+| Allow risky system settings                          | Off to start. The ones that can take the output off air. See below.                                                                                             |
+| Second press within (seconds)                        | How long a risky button waits for its second press. 5 to start.                                                                                                 |
+| Tally colours, border, "Show … on"                   | Defaults for the **Tally: full look** feedback. See below.                                                                                                      |
+| Snapshots                                            | Restore, rename or delete a saved snapshot (pick, then Save). See below.                                                                                        |
+| Chatty log                                           | Everything sent and received, in the log.                                                                                                                       |
 
 **Set connection settings** (an action) can change any of these from a button, or from a trigger on a variable. Fill in only what you want to change; blank means leave it. Impossible values (port 99999, an IP that isn't one) are skipped and logged, never saved.
 
@@ -72,6 +80,50 @@ Output assign, aux mute and link, PinP & Key on/off on PGM or PVW, every PinP & 
 
 **PnP & Key: allow on the Program / Sub Program layer** is the layer setting, not "put it on air". For on air, use **PnP & Key: on/off on PGM or PVW**. (That mix-up is probably upstream issue #24.)
 
+## Labels (the multiview names)
+
+The module reads the switcher's 40 labels (HDMI 1-8, SDI 1-8, Still 1-16, Program, Sub Program, Preview, Aux 1-3, DSK 1-2 source) and uses them everywhere: dropdowns, variables, preset text and the log.
+
+- With a label: `GFX-B (HDMI 3)`, and for a slot `XPT 1 - GFX-B (HDMI 3)`.
+- No label (blank, or just its own name): `HDMI 3` / `XPT 1 - HDMI 3`. No doubling up.
+- Falls back custom label → default name → the slot itself (`XPT 5` when nothing's on it).
+- **Label: set**: up to 8 characters. Takes variables, so a label can follow a custom variable or another module. Longer gets cut to 8 and logged.
+- **Label: refresh**: reads them all again.
+- **Label: matches text** (feedback): lights while a label says something, e.g. HDMI 3 is `GFX-B`.
+
+## System settings
+
+Monitor SW 1-4, multi-view layout and labels, test pattern and tone, dimmers, meters, OSD, panel lock, preset memory, auto switching, RS-232, tally/GPO and more, from Roland's Remote Control Guide v3.30. One action per menu (**System: Display and meters** and so on); pick the setting, then a value, or **Next** / **Previous** to step round. Every setting has a variable (`$(v160hd:sys_monitor1)`) and the **System: setting is** feedback.
+
+Presets: a stepper for every setting (press to go to the next value, shows the current one), plus a button per value for the shorter lists.
+
+**Risky ones** (frame rate, system format, output formats, HDCP, reference) can take the output off air. They only appear once **Allow risky system settings** is on, their actions say **⚠ RISKY**, their presets have a hazard border, and they want a **second press** within the confirm time. The button flashes while it waits.
+
+Not in yet: USER SW 1-4, CTL A/B, EXP, GPI and keypad assigns. Roland doesn't say which number means which function, so they're coming once we've checked on a real switcher. They do travel in snapshots.
+
+## Snapshots ("this is my Hall 9")
+
+- **Snapshot: save**: reads everything from the switcher and keeps it under a name. Pick parts if you like: system settings, risky settings, labels, input assigns, routing.
+- **Snapshot: restore**: writes it back. Pick parts again if you like. Only what the snapshot holds is changed; the rest is left alone. If it holds risky settings, press twice.
+- **Snapshot: delete** (press twice).
+- On the connection page: restore, rename or delete (pick, then Save).
+- **Export and import as files** on the connection's web page: `http://<Companion address>:8000/instance/<connection name>/`. Handy for sharing a Hall 9 between rigs, or keeping a backup.
+
+Snapshots live in the connection's settings, so they go wherever a Companion export goes.
+
+## Tally: full look
+
+One feedback, **Tally: full look**, for any source button:
+
+- **Red** when it's the main Program source, **green** on Preview, **red with a green border** on both.
+- **PinP**: yellow squares in the corners, laid out like the panel. P1 top-left, P2 top-right, P3 bottom-left, P4 bottom-right.
+- **Key**: the same corners, but round (K1-K4).
+- **DSK**: pink-purple squares, D1 top centre, D2 bottom centre.
+- **Aux**: green markers down the right-hand side, Aux 1-3 between the P2 and P4 corners.
+- Filled marker with black text = on Program. Black marker with coloured text = on Preview.
+
+The connection page sets the colours and which sources show each group (all of them to start). Each feedback can override both. The Program, Preview and Cut presets use it.
+
 ## Feedbacks
 
 - **Tally: source is on Program / Preview**: any of the 52 sources (Input 1-20 included), program, preview, both or either.
@@ -81,7 +133,7 @@ Output assign, aux mute and link, PinP & Key on/off on PGM or PVW, every PinP & 
 
 ## Variables
 
-`$(v160hd:pgm)`, `pvw`, `aux1`-`aux3`, `pnpkey1_source`-`pnpkey4_source`, `dsk1_source`, `dsk1_fill`…, `input1_assign`-`input20_assign`, `tally_input1`-`tally_input20`, `tally_hdmi1`…, `memoryname_1`-`memoryname_30`, `lastmemorynumber`, `lastmemoryname`, `version`, `protocol` and the rest. (Swap `v160hd` for your connection's name.)
+`label_hdmi1`… (the raw labels), `name_input1`… (the preset-text form), `fullname_input1`… (the full form), `sys_…` (every system setting), `snapshot_count`, `snapshot_names`, and `$(v160hd:pgm)`, `pvw`, `aux1`-`aux3`, `pnpkey1_source`-`pnpkey4_source`, `dsk1_source`, `dsk1_fill`…, `input1_assign`-`input20_assign`, `tally_input1`-`tally_input20`, `tally_hdmi1`…, `memoryname_1`-`memoryname_30`, `lastmemorynumber`, `lastmemoryname`, `version`, `protocol` and the rest. (Swap `v160hd` for your connection's name.)
 
 ## Presets
 
@@ -92,6 +144,10 @@ Output assign, aux mute and link, PinP & Key on/off on PGM or PVW, every PinP & 
 - **Macros 1-100**
 - **Freeze and output fade**
 - **Cameras**: pick one of 16, then pan, tilt and zoom (hold), and recall presets 1-10
+- **Labels** (refresh) and **Snapshots** (save and restore 1-4)
+- **System settings**, one section per menu (if allowed on the connection page)
+
+Source presets show the label live, in the form picked on the connection page.
 
 ## Not tested on every firmware
 

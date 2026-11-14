@@ -17,6 +17,7 @@ module.exports = {
 		const structure = []
 		const L = self.label
 
+		const W = self.slotWord()
 		const section = (id, name) => structure.push({ id, name, definitions: [] })
 		const button = (id, name, text, down, feedbacks = [], up = [], bgcolor = BLACK) => {
 			presets[id] = {
@@ -36,7 +37,10 @@ module.exports = {
 
 		const inputs = sources.SOURCES.filter((s) => s.id.startsWith('INPUT'))
 		const direct = sources.PHYSICAL_SOURCES
-		const short = (s) => s.label.replace('Input ', 'IN ').toUpperCase()
+		// Button text follows the labels live (form chosen on the connection page)
+		const short = (s) => `$(${L}:name_${s.id.toLowerCase()})`
+		const full = (s) => self.sourceName(s.id, 'full')
+		const look = (s) => ({ feedbackId: 'tallyLook', options: { source: s.id } })
 
 		// ── 1. Program / Preview / Cut / Auto ──
 		section('transitions', 'Cut and Auto')
@@ -45,64 +49,64 @@ module.exports = {
 		button('auto_1s', 'Auto, 1 second', 'AUTO\\n1s', [{ actionId: 'auto', options: { source: '', time: '1' } }])
 		button('auto_2s', 'Auto, 2 seconds', 'AUTO\\n2s', [{ actionId: 'auto', options: { source: '', time: '2' } }])
 
-		section('pgm', 'Program: Input 1-20')
+		section('pgm', `Program: ${W} 1-20`)
 		for (const s of inputs) {
 			button(
 				`pgm_${s.id}`,
-				`Program: ${s.label}`,
+				`Program: ${full(s)}`,
 				`PGM\\n${short(s)}`,
 				[{ actionId: 'select_pgm', options: { source: s.id } }],
-				[onWhere('pgm', s.id, RED)],
+				[look(s)],
 			)
 		}
-		section('pvw', 'Preview: Input 1-20')
+		section('pvw', `Preview: ${W} 1-20`)
 		for (const s of inputs) {
 			button(
 				`pvw_${s.id}`,
-				`Preview: ${s.label}`,
+				`Preview: ${full(s)}`,
 				`PVW\\n${short(s)}`,
 				[{ actionId: 'select_pvw', options: { source: s.id } }],
-				[onWhere('pvw', s.id, GREEN)],
+				[look(s)],
 			)
 		}
 		section('pgm_direct', 'Program: HDMI, SDI and Stills')
 		for (const s of direct) {
 			button(
 				`pgm_${s.id}`,
-				`Program: ${s.label}`,
+				`Program: ${full(s)}`,
 				`PGM\\n${short(s)}`,
 				[{ actionId: 'select_pgm', options: { source: s.id } }],
-				[onWhere('pgm', s.id, RED)],
+				[look(s)],
 			)
 		}
 		section('pvw_direct', 'Preview: HDMI, SDI and Stills')
 		for (const s of direct) {
 			button(
 				`pvw_${s.id}`,
-				`Preview: ${s.label}`,
+				`Preview: ${full(s)}`,
 				`PVW\\n${short(s)}`,
 				[{ actionId: 'select_pvw', options: { source: s.id } }],
-				[onWhere('pvw', s.id, GREEN)],
+				[look(s)],
 			)
 		}
-		section('cut_to', 'Cut straight to Input 1-20')
+		section('cut_to', `Cut straight to ${W} 1-20`)
 		for (const s of inputs) {
 			button(
 				`cut_${s.id}`,
-				`Cut to ${s.label}`,
+				`Cut to ${full(s)}`,
 				`CUT\\n${short(s)}`,
 				[{ actionId: 'cut', options: { source: s.id } }],
-				[{ feedbackId: 'tally', options: { input: s.id, state: 'program' }, style: { bgcolor: RED, color: WHITE } }],
+				[look(s)],
 			)
 		}
 
 		// ── 2. Routing: Aux, PinP & Key, DSK ──
 		for (let a = 1; a <= 3; a++) {
-			section(`aux${a}`, `Aux ${a}: Input 1-20`)
+			section(`aux${a}`, `Aux ${a}: ${W} 1-20`)
 			for (const s of inputs) {
 				button(
 					`aux${a}_${s.id}`,
-					`Aux ${a}: ${s.label}`,
+					`Aux ${a}: ${full(s)}`,
 					`AUX ${a}\\n${short(s)}`,
 					[{ actionId: 'aux_assign', options: { aux: String(a), source: s.id } }],
 					[onWhere(`aux${a}`, s.id, PURPLE)],
@@ -110,7 +114,7 @@ module.exports = {
 			}
 		}
 		for (let k = 1; k <= 4; k++) {
-			section(`pinp${k}`, `PinP & Key ${k}: Input 1-20`)
+			section(`pinp${k}`, `PinP & Key ${k}: ${W} 1-20`)
 			button(
 				`pinp${k}_pgm`,
 				`PinP & Key ${k} on Program (toggle on/off with the switcher state)`,
@@ -130,7 +134,7 @@ module.exports = {
 			for (const s of inputs) {
 				button(
 					`pinp${k}_${s.id}`,
-					`PinP & Key ${k}: ${s.label}`,
+					`PinP & Key ${k}: ${full(s)}`,
 					`PinP ${k}\\n${short(s)}`,
 					[{ actionId: 'pnpkey_setsource', options: { pinp: String(k), source: s.id } }],
 					[onWhere(`pinp${k}`, s.id, PURPLE)],
@@ -138,7 +142,7 @@ module.exports = {
 			}
 		}
 		for (let d = 1; d <= 2; d++) {
-			section(`dsk${d}`, `DSK ${d}: key source Input 1-20`)
+			section(`dsk${d}`, `DSK ${d}: key source ${W} 1-20`)
 			button(`dsk${d}_on`, `DSK ${d} on Program`, `DSK ${d}\\nON AIR`, [
 				{ actionId: 'dsk_busselect', options: { dsk: d === 1 ? '1F' : '20', bus: '00', onoff: '01' } },
 			])
@@ -148,7 +152,7 @@ module.exports = {
 			for (const s of inputs) {
 				button(
 					`dsk${d}_${s.id}`,
-					`DSK ${d} key: ${s.label}`,
+					`DSK ${d} key: ${full(s)}`,
 					`DSK ${d}\\n${short(s)}`,
 					[{ actionId: 'set_dsk_key_source', options: { dsk: String(d), source: s.id } }],
 					[onWhere(`dsk${d}`, s.id, PURPLE)],
@@ -220,6 +224,88 @@ module.exports = {
 				{ actionId: 'cameraCurrentPreset', options: { useSelected: true, camera: '41', preset: sources.hexOf(p - 1) } },
 			])
 		}
+
+		// ── 5. Labels and snapshots ──
+		section('labels', 'Labels')
+		button('label_refresh', 'Read every label again', 'LABELS\\nREFRESH', [{ actionId: 'label_refresh', options: {} }])
+		section('snapshots', 'Snapshots (save and restore the set-up)')
+		for (let n = 1; n <= 4; n++) {
+			button(`snap_save_${n}`, `Save snapshot "Snapshot ${n}"`, `SAVE\\nSNAP ${n}`, [
+				{ actionId: 'snapshot_save', options: { name: `Snapshot ${n}`, parts: self.SNAPSHOT_PARTS.map((p) => p.id) } },
+			])
+			button(
+				`snap_restore_${n}`,
+				`Restore snapshot "Snapshot ${n}" (press twice if it holds risky settings)`,
+				`LOAD\\nSNAP ${n}`,
+				[
+					{
+						actionId: 'snapshot_restore',
+						options: { name: `Snapshot ${n}`, parts: self.SNAPSHOT_PARTS.map((p) => p.id) },
+					},
+				],
+				[{ feedbackId: 'confirmPending', options: {}, style: { bgcolor: AMBER, color: BLACK } }],
+			)
+		}
+
+		// ── 6. System settings (if allowed on the connection page) ──
+		const HAZARD = combineRgb(255, 176, 0)
+		const layered = (id, name, text, down, fb) => {
+			const overrides = (colour) => [
+				{ elementId: 'bg', elementProperty: 'color', override: { isExpression: false, value: colour } },
+			]
+			const lf = [{ feedbackId: 'confirmPending', options: {}, styleOverrides: overrides(HAZARD) }]
+			const sf = [{ feedbackId: 'confirmPending', options: {}, style: { bgcolor: HAZARD, color: BLACK } }]
+			if (fb) {
+				lf.unshift({ ...fb, styleOverrides: overrides(combineRgb(120, 60, 0)) })
+				sf.unshift({ ...fb, style: { bgcolor: combineRgb(120, 60, 0), color: WHITE } })
+			}
+			presets[id] = {
+				type: 'alternatives',
+				variants: [
+					{
+						type: 'layered',
+						name: `${self.SYSTEM_RISKY_FLAG} ${name}`,
+						elements: [
+							{
+								type: 'box',
+								id: 'bg',
+								x: 0,
+								y: 0,
+								width: 100,
+								height: 100,
+								color: BLACK,
+								borderWidth: 6,
+								borderColor: HAZARD,
+								borderPosition: 'inside',
+							},
+							{
+								type: 'text',
+								id: 'text',
+								x: 0,
+								y: 0,
+								width: 100,
+								height: 100,
+								text: text.replace(/\\n/g, '\n'),
+								color: WHITE,
+								halign: 'center',
+								valign: 'center',
+							},
+						],
+						steps: [{ down, up: [] }],
+						feedbacks: lf,
+					},
+					{
+						type: 'simple',
+						name: `${self.SYSTEM_RISKY_FLAG} ${name}`,
+						style: { text: `⚠ ${text}`, size: 'auto', color: HAZARD, bgcolor: BLACK },
+						steps: [{ down, up: [] }],
+						feedbacks: sf,
+					},
+				],
+			}
+			structure[structure.length - 1].definitions.push(id)
+		}
+		self.systemPresets(section, button, layered)
 
 		self.setPresetDefinitions(structure, presets)
 	},

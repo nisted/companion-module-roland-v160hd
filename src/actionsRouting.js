@@ -199,7 +199,10 @@ function extraActions(self, actions) {
 		let tip = ''
 		if (def.kind === 'int') tip = `A whole number from ${def.min} to ${def.max}.`
 		if (def.kind === 'ip') tip = 'An IP address, like 192.168.0.1.'
-		if (def.kind === 'choice') tip = `One of: ${PROTOCOL_CHOICES.map((c) => c.id).join(', ')}.`
+		if (def.kind === 'choice')
+			tip = `One of: ${f === 'protocol' ? PROTOCOL_CHOICES.map((c) => c.id).join(', ') : def.choices.join(', ')}.`
+		if (def.kind === 'colour') tip = 'A colour like #FF0000.'
+		if (def.kind === 'list') tip = 'Sources, comma separated: INPUT1, HDMI3, STILL2…'
 		if (def.kind === 'bool') tip = 'on or off (true/false, 1/0 work too).'
 		return {
 			type: 'textinput',

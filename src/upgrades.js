@@ -164,6 +164,34 @@ function upgradeSetByAction(_context, props) {
 	return { updatedConfig: changed ? next : null, updatedActions: [], updatedFeedbacks: [] }
 }
 
+/** rebel.4: labels, naming, system settings, tally look: fill in the new connection settings */
+function upgradeRebel4Config(_context, props) {
+	const c = props.config
+	if (!c) return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
+	const { TALLY_DEFAULT_COLOURS, TALLY_GROUPS } = require('./tally')
+	const sources = require('./sources')
+	const defaults = {
+		inputNaming: 'xpt',
+		buttonText: 'labelOnly',
+		labelrefresh: '30',
+		allowSystem: true,
+		allowRisky: false,
+		confirmSecs: '5',
+		tallyBorder: '5',
+	}
+	for (const [k, v] of Object.entries(TALLY_DEFAULT_COLOURS)) defaults[`tallyColour_${k}`] = v
+	for (const g of TALLY_GROUPS) defaults[`tallyShow_${g.id}`] = sources.SOURCES.map((s) => s.id)
+	const next = { ...c }
+	let changed = false
+	for (const [k, v] of Object.entries(defaults)) {
+		if (next[k] === undefined) {
+			next[k] = v
+			changed = true
+		}
+	}
+	return { updatedConfig: changed ? next : null, updatedActions: [], updatedFeedbacks: [] }
+}
+
 module.exports = [
 	function () {
 		return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
@@ -187,9 +215,11 @@ module.exports = [
 	upgradeToRebelRouting,
 	upgradeRebelConfig,
 	upgradeSetByAction,
+	upgradeRebel4Config,
 ]
 
 module.exports.upgradeToRebelRouting = upgradeToRebelRouting
 module.exports.upgradeRebelConfig = upgradeRebelConfig
 module.exports.upgradeSetByAction = upgradeSetByAction
+module.exports.upgradeRebel4Config = upgradeRebel4Config
 module.exports._test = { get, set, tokenFromHex, tokenFromNum }

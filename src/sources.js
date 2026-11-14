@@ -77,6 +77,23 @@ function resolveSlot(value) {
 	return INPUT_SLOTS.find((x) => x.id === s.id)
 }
 
+/**
+ * Who names sources in dropdowns. The instance sets this so dropdowns show labels
+ * (XPT 1 - GFX-B (HDMI 3)). Each connection runs in its own process, so one is fine.
+ */
+let namer = null
+function useNamer(fn) {
+	namer = typeof fn === 'function' ? fn : null
+}
+const nameOf = (s) => {
+	if (!namer) return s.label
+	try {
+		return namer(s.id) || s.label
+	} catch {
+		return s.label
+	}
+}
+
 module.exports = {
 	SOURCES,
 	PHYSICAL_SOURCES,
@@ -86,11 +103,12 @@ module.exports = {
 	resolveSlot,
 	sourceFromHex,
 	sourceFromToken,
+	useNamer,
 	/** Dropdown choices */
-	sourceChoices: () => SOURCES.map((s) => ({ id: s.id, label: s.label })),
+	sourceChoices: () => SOURCES.map((s) => ({ id: s.id, label: nameOf(s) })),
 	physicalChoices: (withNone) =>
 		(withNone ? [{ id: 'N/A', label: 'Nothing (N/A)' }] : []).concat(
-			PHYSICAL_SOURCES.map((s) => ({ id: s.id, label: s.label })),
+			PHYSICAL_SOURCES.map((s) => ({ id: s.id, label: nameOf(s) })),
 		),
-	slotChoices: () => INPUT_SLOTS.map((s) => ({ id: s.id, label: s.label })),
+	slotChoices: () => INPUT_SLOTS.map((s) => ({ id: s.id, label: nameOf(s) })),
 }

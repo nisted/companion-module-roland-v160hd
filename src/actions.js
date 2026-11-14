@@ -2296,6 +2296,9 @@ module.exports = {
 		}
 
 		extraActions(self, actions)
+		self.labelActions(actions)
+		self.systemActions(actions)
+		self.snapshotActions(actions)
 		self.setActionDefinitions(actions)
 	},
 }
