@@ -92,8 +92,7 @@ function route(self, dest, idx, rawSource) {
 	}
 	// Show it straight away; polling (or the switcher's ERR) puts it right if needed
 	self.DATA[d.data(n)] = src.hex
-	self.checkAllFeedbacks()
-	self.checkVariables()
+	self.scheduleRefresh(true)
 	return true
 }
 
@@ -125,8 +124,7 @@ function assignSlot(self, rawSlot, rawSource) {
 	}
 	if (!Array.isArray(self.DATA.inputAssign)) self.DATA.inputAssign = new Array(20).fill(undefined)
 	self.DATA.inputAssign[n - 1] = none ? undefined : src.hex
-	self.checkAllFeedbacks()
-	self.checkVariables()
+	self.scheduleRefresh(true)
 	return true
 }
 

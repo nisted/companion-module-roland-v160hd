@@ -12,6 +12,7 @@ const labels = require('../src/labels')
 const system = require('../src/system')
 const tally = require('../src/tally')
 const snapshots = require('../src/snapshots')
+const refresh = require('../src/refresh')
 const { CommandQueue } = require('../src/commandQueue')
 
 function makeFake(cfg = {}) {
@@ -29,6 +30,7 @@ function makeFake(cfg = {}) {
 		...system,
 		...tally,
 		...snapshots,
+		...refresh,
 		MEM: {},
 		label: 'v160',
 		config: { host: '10.0.0.1', password: '1234', protocol: 'auto', polling: true, ...cfg },

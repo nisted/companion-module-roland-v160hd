@@ -1,6 +1,6 @@
 {
 	"name": "roland-v160hd",
-	"version": "3.0.0-rebel.4",
+	"version": "3.0.0-rebel.5",
 	"main": "main.mjs",
 	"scripts": {
 		"test": "node --test",

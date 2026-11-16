@@ -49,42 +49,7 @@ function sourceFeedbacks(self, feedbacks) {
 		tooltip: "Input 1-20, HDMI 1-8, SDI 1-8 or Still 1-16. An input and the HDMI/SDI it's given count as the same.",
 	}
 
-	feedbacks.tally = {
-		type: 'boolean',
-		name: 'Tally: source is on Program / Preview',
-		description: "From the switcher's own tally: on air (PGM), on preview (PVW), or both.",
-		defaultStyle: { color: WHITE, bgcolor: RED },
-		options: [
-			{ ...sourceOpt, id: 'input' },
-			{
-				type: 'dropdown',
-				label: 'When it is on',
-				id: 'state',
-				default: 'program',
-				choices: [
-					{ id: 'program', label: 'Program' },
-					{ id: 'preview', label: 'Preview' },
-					{ id: 'both', label: 'Both at once' },
-					{ id: 'either', label: 'Either' },
-				],
-			},
-		],
-		callback: (fb) => {
-			const src = sources.resolveSource(fb.options.input)
-			if (!src) return false
-			const status = (self.TALLY || {})[src.id] || 0
-			switch (fb.options.state) {
-				case 'preview':
-					return (status & 0x02) !== 0
-				case 'both':
-					return (status & 0x03) === 0x03
-				case 'either':
-					return status !== 0
-				default:
-					return (status & 0x01) !== 0
-			}
-		},
-	}
+	// Tally State (feedbacks.tally) lives in src/tally.js: one feedback for the whole tally look
 
 	feedbacks.sourceOn = {
 		type: 'boolean',
@@ -110,7 +75,8 @@ function sourceFeedbacks(self, feedbacks) {
 	// Kept for buttons made with the upstream module (upgrade scripts convert their options)
 	feedbacks.auxTally = {
 		type: 'boolean',
-		name: 'Route: Aux is showing a source',
+		name: 'Aux Tally State',
+		description: 'Indicate if Input Channel is in an Auxiliary Channel',
 		defaultStyle: { color: WHITE, bgcolor: RED },
 		options: [
 			{
@@ -124,26 +90,27 @@ function sourceFeedbacks(self, feedbacks) {
 					{ id: 'aux3', label: 'Aux 3' },
 				],
 			},
-			{ ...sourceOpt, id: 'assign' },
+			{ ...sourceOpt, label: 'Input Type', id: 'assign' },
 		],
 		callback: (fb) => sameSource(self, self.DATA[`${String(fb.options.aux).toLowerCase()}source`], fb.options.assign),
 	}
 
 	feedbacks.pnpKeySource = {
 		type: 'boolean',
-		name: 'Route: PinP & Key is showing a source',
+		name: 'PinP/Key Source State',
+		description: 'Indicate if PinP/Key Source is Selected on PinP/Key',
 		defaultStyle: { color: WHITE, bgcolor: RED },
 		options: [
 			{
 				type: 'dropdown',
-				label: 'PinP & Key',
+				label: 'PinP/Key',
 				id: 'pinp',
 				default: 'pnpkey1',
 				choices: [
-					{ id: 'pnpkey1', label: 'PinP & Key 1' },
-					{ id: 'pnpkey2', label: 'PinP & Key 2' },
-					{ id: 'pnpkey3', label: 'PinP & Key 3' },
-					{ id: 'pnpkey4', label: 'PinP & Key 4' },
+					{ id: 'pnpkey1', label: 'PinP/Key 1' },
+					{ id: 'pnpkey2', label: 'PinP/Key 2' },
+					{ id: 'pnpkey3', label: 'PinP/Key 3' },
+					{ id: 'pnpkey4', label: 'PinP/Key 4' },
 				],
 			},
 			sourceOpt,

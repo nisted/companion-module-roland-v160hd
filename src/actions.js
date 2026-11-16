@@ -153,13 +153,13 @@ module.exports = {
 		}
 
 		actions.pnpkey_enable = {
-			name: 'PnP & Key: allow on the Program / Sub Program layer (layer setting)',
+			name: 'PinP & Key Enable/Disable',
 			description:
-				"This is the layer setting, not taking a PinP on air. For on air, use 'PnP & Key: on/off on PGM or PVW'.",
+				"The layer setting: whether this PinP/Key may be used on the Program / Sub Program layer. It doesn't take it on or off air; for that, use 'PinP & Key Bus Select'.",
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: self.CHOICES_PINPDSK[0].id,
 					choices: self.CHOICES_PINPDSK,
@@ -169,6 +169,8 @@ module.exports = {
 					label: 'Enable/Disable',
 					id: 'enable',
 					default: 1,
+					tooltip:
+						"Allows or blocks this PinP/Key on the Program / Sub Program layer. Not on/off air: that's 'PinP & Key Bus Select'.",
 					choices: [
 						{ id: 0, label: 'Disable' },
 						{ id: 1, label: 'Enable' },
@@ -185,18 +187,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_fade = {
-			name: 'PnP & Key Fade Enable/Disable',
+			name: 'PinP & Key Fade Enable/Disable',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '05',
 					choices: [
-						{ id: '05', label: 'PnP/Key 1' },
-						{ id: '06', label: 'PnP/Key 2' },
-						{ id: '07', label: 'PnP/Key 3' },
-						{ id: '08', label: 'PnP/Key 4' },
+						{ id: '05', label: 'PinP/Key 1' },
+						{ id: '06', label: 'PinP/Key 2' },
+						{ id: '07', label: 'PinP/Key 3' },
+						{ id: '08', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -220,18 +222,20 @@ module.exports = {
 		}
 
 		actions.pnpkey_busselect = {
-			name: 'PnP & Key: on/off on PGM or PVW',
+			name: 'PinP & Key Bus Select',
+			description:
+				"Takes this PinP/Key on or off air on Program, or on or off Preview. To allow or block it on the layer, use 'PinP & Key Enable/Disable'.",
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -249,6 +253,8 @@ module.exports = {
 					label: 'On/Off',
 					id: 'onoff',
 					default: '01',
+					tooltip:
+						"On or off air (Program) or on or off Preview. Not the layer setting: that's 'PinP & Key Enable/Disable'.",
 					choices: [
 						{ id: '00', label: 'Off' },
 						{ id: '01', label: 'On' },
@@ -264,18 +270,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_settype = {
-			name: 'PnP & Key Set Type',
+			name: 'PinP & Key Set Type',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -301,18 +307,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_positionH = {
-			name: 'PnP & Key Position Horizontal',
+			name: 'PinP & Key Position Horizontal',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -338,18 +344,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_positionV = {
-			name: 'PnP & Key Position Vertical',
+			name: 'PinP & Key Position Vertical',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -375,18 +381,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_size = {
-			name: 'PnP & Key Size',
+			name: 'PinP & Key Size',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -412,18 +418,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_croppingH = {
-			name: 'PnP & Key Cropping Horizontal',
+			name: 'PinP & Key Cropping Horizontal',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -449,18 +455,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_croppingV = {
-			name: 'PnP & Key Cropping Vertical',
+			name: 'PinP & Key Cropping Vertical',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -486,18 +492,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_shape = {
-			name: 'PnP & Key Shape',
+			name: 'PinP & Key Shape',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -521,18 +527,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_borderColor = {
-			name: 'PnP & Key Border Color',
+			name: 'PinP & Key Border Color',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -563,18 +569,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_borderWidth = {
-			name: 'PnP & Key Border Width',
+			name: 'PinP & Key Border Width',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -599,18 +605,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_viewPositionH = {
-			name: 'PnP & Key View Position Horizontal',
+			name: 'PinP & Key View Position Horizontal',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -636,18 +642,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_viewPositionV = {
-			name: 'PnP & Key View Position Vertical',
+			name: 'PinP & Key View Position Vertical',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -673,18 +679,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_viewZoom = {
-			name: 'PnP & Key View Zoom',
+			name: 'PinP & Key View Zoom',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -710,18 +716,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_keyLevel = {
-			name: 'PnP & Key Key Level',
+			name: 'PinP & Key Key Level',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -747,18 +753,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_keyGain = {
-			name: 'PnP & Key Key Gain',
+			name: 'PinP & Key Key Gain',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -784,18 +790,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_mixLevel = {
-			name: 'PnP & Key Mix Level',
+			name: 'PinP & Key Mix Level',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -821,18 +827,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_chromaColor = {
-			name: 'PnP & Key Chroma Color',
+			name: 'PinP & Key Chroma Color',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -855,18 +861,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_hueWidth = {
-			name: 'PnP & Key Hue Width',
+			name: 'PinP & Key Hue Width',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -890,18 +896,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_hueFine = {
-			name: 'PnP & Key Hue Fine',
+			name: 'PinP & Key Hue Fine',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -927,18 +933,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_saturationWidth = {
-			name: 'PnP & Key Saturation Width',
+			name: 'PinP & Key Saturation Width',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -964,18 +970,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_saturationFine = {
-			name: 'PnP & Key Saturation Fine',
+			name: 'PinP & Key Saturation Fine',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -1001,18 +1007,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_borderColorRed = {
-			name: 'PnP & Key Border Color Red',
+			name: 'PinP & Key Border Color Red',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -1038,18 +1044,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_borderColorGreen = {
-			name: 'PnP & Key Border Color Green',
+			name: 'PinP & Key Border Color Green',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -1075,18 +1081,18 @@ module.exports = {
 		}
 
 		actions.pnpkey_borderColorBlue = {
-			name: 'PnP & Key Border Color Blue',
+			name: 'PinP & Key Border Color Blue',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -1112,7 +1118,7 @@ module.exports = {
 		}
 
 		actions.dsk_busselect = {
-			name: 'DSK: on/off on PGM or PVW',
+			name: 'DSK Bus Select',
 			options: [
 				{
 					type: 'dropdown',
@@ -1321,11 +1327,11 @@ module.exports = {
 		}
 
 		actions.set_pinp_type = {
-			name: 'Set PnP & Key Type',
+			name: 'Set PinP & Key Type',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: self.CHOICES_PINP_KEYS[0].id,
 					choices: self.CHOICES_PINP_KEYS,
@@ -1532,6 +1538,8 @@ module.exports = {
 					label: 'Enable/Disable',
 					id: 'enable',
 					default: 1,
+					tooltip:
+						"Allows or blocks this PinP/Key on the Program / Sub Program layer. Not on/off air: that's 'PinP & Key Bus Select'.",
 					choices: [
 						{ id: '00', label: 'Disable' },
 						{ id: '01', label: 'Enable' },

@@ -247,14 +247,14 @@ module.exports = {
 			options: [
 				{
 					type: 'dropdown',
-					label: 'PnP/Key',
+					label: 'PinP/Key',
 					id: 'pinp',
 					default: '1B',
 					choices: [
-						{ id: '1B', label: 'PnP/Key 1' },
-						{ id: '1C', label: 'PnP/Key 2' },
-						{ id: '1D', label: 'PnP/Key 3' },
-						{ id: '1E', label: 'PnP/Key 4' },
+						{ id: '1B', label: 'PinP/Key 1' },
+						{ id: '1C', label: 'PinP/Key 2' },
+						{ id: '1D', label: 'PinP/Key 3' },
+						{ id: '1E', label: 'PinP/Key 4' },
 					],
 				},
 				{
@@ -318,6 +318,7 @@ module.exports = {
 		self.labelFeedbacks(feedbacks)
 		self.systemFeedbacks(feedbacks)
 		self.tallyFeedbacks(feedbacks)
+		self._feedbackIds = Object.keys(feedbacks)
 		self.setFeedbackDefinitions(feedbacks)
 	},
 }

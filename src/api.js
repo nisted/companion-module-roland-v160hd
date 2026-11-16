@@ -471,9 +471,8 @@ module.exports = {
 				changed = self._handleNamed(msg)
 			}
 			if (changed) {
-				if (typeof self._labelsChanged === 'function') self._labelsChanged()
-				self.checkAllFeedbacks()
-				self.checkVariables()
+				// Only what actually changed gets re-checked, once per batch (src/refresh.js)
+				self.scheduleRefresh()
 				if (before) self._recordChanges(before)
 			}
 		} catch (error) {
@@ -625,7 +624,7 @@ module.exports = {
 				if (block1B) {
 					self.DATA['data_1B00'] = block1B[0]
 					self.DATA['data_1B01'] = block1B[1]
-					self.logVerbose('Received PnP/Key 1 PGM+PVW: ' + value)
+					self.logVerbose('Received PinP/Key 1 PGM+PVW: ' + value)
 				} else if (self._parseHexBlock(value, 1)) {
 					self.DATA['data_1B00'] = value
 				} else {
@@ -637,7 +636,7 @@ module.exports = {
 				if (block1C) {
 					self.DATA['data_1C00'] = block1C[0]
 					self.DATA['data_1C01'] = block1C[1]
-					self.logVerbose('Received PnP/Key 2 PGM+PVW: ' + value)
+					self.logVerbose('Received PinP/Key 2 PGM+PVW: ' + value)
 				} else if (self._parseHexBlock(value, 1)) {
 					self.DATA['data_1C00'] = value
 				} else {
@@ -649,7 +648,7 @@ module.exports = {
 				if (block1D) {
 					self.DATA['data_1D00'] = block1D[0]
 					self.DATA['data_1D01'] = block1D[1]
-					self.logVerbose('Received PnP/Key 3 PGM+PVW: ' + value)
+					self.logVerbose('Received PinP/Key 3 PGM+PVW: ' + value)
 				} else if (self._parseHexBlock(value, 1)) {
 					self.DATA['data_1D00'] = value
 				} else {
@@ -661,7 +660,7 @@ module.exports = {
 				if (block1E) {
 					self.DATA['data_1E00'] = block1E[0]
 					self.DATA['data_1E01'] = block1E[1]
-					self.logVerbose('Received PnP/Key 4 PGM+PVW: ' + value)
+					self.logVerbose('Received PinP/Key 4 PGM+PVW: ' + value)
 				} else if (self._parseHexBlock(value, 1)) {
 					self.DATA['data_1E00'] = value
 				} else {
@@ -669,16 +668,16 @@ module.exports = {
 				}
 			} else if (param2 == '1B' && param3 == '02') {
 				self.DATA.pnpkey1source = value
-				self.logVerbose('Received PnP/Key 1 Source: ' + value)
+				self.logVerbose('Received PinP/Key 1 Source: ' + value)
 			} else if (param2 == '1C' && param3 == '02') {
 				self.DATA.pnpkey2source = value
-				self.logVerbose('Received PnP/Key 2 Source: ' + value)
+				self.logVerbose('Received PinP/Key 2 Source: ' + value)
 			} else if (param2 == '1D' && param3 == '02') {
 				self.DATA.pnpkey3source = value
-				self.logVerbose('Received PnP/Key 3 Source: ' + value)
+				self.logVerbose('Received PinP/Key 3 Source: ' + value)
 			} else if (param2 == '1E' && param3 == '02') {
 				self.DATA.pnpkey4source = value
-				self.logVerbose('Received PnP/Key 4 Source: ' + value)
+				self.logVerbose('Received PinP/Key 4 Source: ' + value)
 			} else if (param2 == '00') {
 				const p3va = parseInt(param3, 16)
 				if (p3va >= 0x00 && p3va <= 0x09) {

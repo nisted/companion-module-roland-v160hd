@@ -202,8 +202,7 @@ test('tally look: red on PGM, green on PVW, red with a green border on both', ()
 	const { self } = build()
 	self.DATA.pgmsource = '02'
 	self.DATA.pvwsource = '03'
-	const look = (src) =>
-		self.feedbackDefs.tallyLook.callback({ options: { source: src }, image: { width: 72, height: 72 } })
+	const look = (src) => self.feedbackDefs.tally.callback({ options: { source: src }, image: { width: 72, height: 72 } })
 	assert.equal(look('HDMI3').bgcolor, 0xcc0000)
 	assert.equal(look('HDMI3').imageBuffer, undefined)
 	assert.equal(look('HDMI4').bgcolor, 0x00a000)
@@ -225,7 +224,7 @@ test('tally look: PinP square top-left, key circle, DSK top centre, Aux down the
 	self.DATA.dsk1fill = '02'
 	self.MEM['001F00'] = 1
 	self.DATA.aux2source = '02'
-	const r = self.feedbackDefs.tallyLook.callback({ options: { source: 'HDMI3' }, image: { width: 72, height: 72 } })
+	const r = self.feedbackDefs.tally.callback({ options: { source: 'HDMI3' }, image: { width: 72, height: 72 } })
 	assert.equal(r.bgcolor, undefined, 'not the main PGM source')
 	assert.equal(px(r, 72, 0, 0), 0xffd400, 'P1: yellow square in the corner')
 	// Layer 4 is a key on PVW: black circle, so the very corner stays clear
@@ -233,15 +232,15 @@ test('tally look: PinP square top-left, key circle, DSK top centre, Aux down the
 	assert.equal(px(r, 72, 36, 0), 0xc040c0, 'D1 top centre, on PGM')
 	assert.equal(px(r, 72, 71, Math.round(72 / 5) * 2 + 2), 0x00c000, 'Aux 2 in row 3 on the right')
 	// The feedback can hide a group
-	const hidden = self.feedbackDefs.tallyLook.callback({
-		options: { source: 'HDMI3', show_pinp: 'off', show_key: 'off', show_dsk: 'off', show_aux: 'off' },
+	const hidden = self.feedbackDefs.tally.callback({
+		options: { source: 'HDMI3', custom: true, show_pinp: 'off', show_key: 'off', show_dsk: 'off', show_aux: 'off' },
 		image: { width: 72, height: 72 },
 	})
 	assert.equal(hidden.imageBuffer, undefined)
 	// So can the connection page, per source
 	self.config.tallyShow_aux = ['HDMI1']
-	const r2 = self.feedbackDefs.tallyLook.callback({
-		options: { source: 'HDMI3', show_pinp: 'off', show_key: 'off', show_dsk: 'off' },
+	const r2 = self.feedbackDefs.tally.callback({
+		options: { source: 'HDMI3', custom: true, show_pinp: 'off', show_key: 'off', show_dsk: 'off' },
 		image: { width: 72, height: 72 },
 	})
 	assert.equal(r2.imageBuffer, undefined)
@@ -251,8 +250,7 @@ test('tally look: an input slot lights for its HDMI and the other way round', ()
 	const { self } = build()
 	self.DATA.inputAssign = ['02']
 	self.DATA.pgmsource = '20' // XPT 1
-	const look = (src) =>
-		self.feedbackDefs.tallyLook.callback({ options: { source: src }, image: { width: 72, height: 72 } })
+	const look = (src) => self.feedbackDefs.tally.callback({ options: { source: src }, image: { width: 72, height: 72 } })
 	assert.equal(look('HDMI3').bgcolor, 0xcc0000)
 	assert.equal(look('INPUT1').bgcolor, 0xcc0000)
 })

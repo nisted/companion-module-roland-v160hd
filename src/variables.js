@@ -114,7 +114,19 @@ module.exports = {
 			self.labelVariableValues(v)
 			self.systemVariableValues(v)
 			self.snapshotVariableValues(v)
-			self.setVariableValues(v)
+			// Only send what changed (the rest is already in Companion)
+			const cache = self._varCache || {}
+			const send = {}
+			let any = false
+			for (const k of Object.keys(v)) {
+				if (cache[k] !== v[k]) {
+					send[k] = v[k]
+					cache[k] = v[k]
+					any = true
+				}
+			}
+			self._varCache = cache
+			if (any) self.setVariableValues(send)
 		} catch (error) {
 			self.log('error', 'Error setting variables: ' + String(error))
 		}

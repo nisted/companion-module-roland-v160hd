@@ -192,6 +192,41 @@ function upgradeRebel4Config(_context, props) {
 	return { updatedConfig: changed ? next : null, updatedActions: [], updatedFeedbacks: [] }
 }
 
+/**
+ * rebel.5: one tally feedback. Old boolean Tally State buttons and rebel.4's
+ * "Tally: full look" both become the one advanced Tally State (id 'tally').
+ *  - Old Tally State (has 'state', no 'custom'): Change default behaviour on, same
+ *    state (switcher tally, as before), PGM/PVW colours only, no markers.
+ *  - Tally: full look: renamed to 'tally', 'source' -> 'input'; Change default
+ *    behaviour on only if it had anything other than the defaults.
+ */
+function upgradeRebel5Tally(_context, props) {
+	const updatedFeedbacks = []
+	const groups = ['main', 'pinp', 'key', 'dsk', 'aux']
+	for (const f of props.feedbacks) {
+		const o = f.options
+		if (f.feedbackId === 'tally' && 'state' in o && !('custom' in o)) {
+			set(o, 'custom', true)
+			set(o, 'show_main', 'on')
+			for (const g of groups.slice(1)) set(o, `show_${g}`, 'off')
+			set(o, 'ownColours', false)
+			updatedFeedbacks.push(f)
+		} else if (f.feedbackId === 'tallyLook') {
+			f.feedbackId = 'tally'
+			rename(o, 'source', 'input')
+			const own = get(o, 'ownColours') === true
+			const groupsChanged = groups.some((g) => {
+				const v = o[`show_${g}`]
+				return v !== undefined && (wrapped(v) ? v.isExpression || v.value !== 'default' : v !== 'default')
+			})
+			set(o, 'custom', own || groupsChanged)
+			set(o, 'state', 'full')
+			updatedFeedbacks.push(f)
+		}
+	}
+	return { updatedConfig: null, updatedActions: [], updatedFeedbacks }
+}
+
 module.exports = [
 	function () {
 		return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
@@ -216,10 +251,12 @@ module.exports = [
 	upgradeRebelConfig,
 	upgradeSetByAction,
 	upgradeRebel4Config,
+	upgradeRebel5Tally,
 ]
 
 module.exports.upgradeToRebelRouting = upgradeToRebelRouting
 module.exports.upgradeRebelConfig = upgradeRebelConfig
 module.exports.upgradeSetByAction = upgradeSetByAction
 module.exports.upgradeRebel4Config = upgradeRebel4Config
+module.exports.upgradeRebel5Tally = upgradeRebel5Tally
 module.exports._test = { get, set, tokenFromHex, tokenFromNum }

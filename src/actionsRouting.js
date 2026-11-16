@@ -27,31 +27,31 @@ function numberChoice(id, label, count, prefix) {
 
 function routingActions(self, actions) {
 	actions.select_pgm = {
-		name: 'Route: Program (PGM) source',
+		name: 'Select PGM Source',
 		description: 'Put a source straight on Program.',
-		options: [sourceOption('Source')],
+		options: [sourceOption('Input')],
 		callback: (a) => route(self, 'pgm', 1, a.options.source),
 		learn: () => ({ source: sources.sourceFromHex(self.DATA.pgmsource)?.id ?? 'INPUT1' }),
 	}
 
 	actions.select_pvw = {
-		name: 'Route: Preview (PVW) source',
+		name: 'Select PVW Source',
 		description: 'Put a source on Preview, ready for the next Cut or Auto.',
-		options: [sourceOption('Source')],
+		options: [sourceOption('Input')],
 		callback: (a) => route(self, 'pvw', 1, a.options.source),
 		learn: () => ({ source: sources.sourceFromHex(self.DATA.pvwsource)?.id ?? 'INPUT1' }),
 	}
 
 	actions.aux_assign = {
-		name: 'Route: Aux source',
-		options: [numberChoice('aux', 'Aux', 3, 'Aux'), sourceOption('Source')],
+		name: 'Assign Aux',
+		options: [numberChoice('aux', 'Aux', 3, 'Aux'), sourceOption('Input Type')],
 		callback: (a) => route(self, 'aux', a.options.aux, a.options.source),
 		learn: (a) => ({ source: sources.sourceFromHex(self.DATA[`aux${a.options.aux}source`])?.id ?? a.options.source }),
 	}
 
 	actions.pnpkey_setsource = {
-		name: 'Route: PinP & Key source',
-		options: [numberChoice('pinp', 'PinP & Key', 4, 'PinP & Key'), sourceOption('Source', INPUT_11_20_TIP)],
+		name: 'PinP & Key Set Source',
+		options: [numberChoice('pinp', 'PinP/Key', 4, 'PinP/Key'), sourceOption('Source', INPUT_11_20_TIP)],
 		callback: (a) => route(self, 'pinp', a.options.pinp, a.options.source),
 		learn: (a) => ({
 			source: sources.sourceFromHex(self.DATA[`pnpkey${a.options.pinp}source`])?.id ?? a.options.source,
@@ -59,29 +59,29 @@ function routingActions(self, actions) {
 	}
 
 	actions.set_dsk_key_source = {
-		name: 'Route: DSK key source',
+		name: 'Set DSK Key Source',
 		description: 'In Alpha Key mode the switcher only takes Stills here.',
-		options: [numberChoice('dsk', 'DSK', 2, 'DSK'), sourceOption('Source', INPUT_11_20_TIP)],
+		options: [numberChoice('dsk', 'DSK', 2, 'DSK'), sourceOption('Input Type', INPUT_11_20_TIP)],
 		callback: (a) => route(self, 'dskkey', a.options.dsk, a.options.source),
 		learn: (a) => ({ source: sources.sourceFromHex(self.DATA[`dsk${a.options.dsk}source`])?.id ?? a.options.source }),
 	}
 
 	actions.set_dsk_fill_source = {
-		name: 'Route: DSK fill source',
+		name: 'Set DSK Fill Source',
 		description:
 			'Only takes effect when the DSK is in External Key mode. Roland has no named command for this, so Input 1-20 may be turned down.',
-		options: [numberChoice('dsk', 'DSK', 2, 'DSK'), sourceOption('Source')],
+		options: [numberChoice('dsk', 'DSK', 2, 'DSK'), sourceOption('Input Type')],
 		callback: (a) => route(self, 'dskfill', a.options.dsk, a.options.source),
 		learn: (a) => ({ source: sources.sourceFromHex(self.DATA[`dsk${a.options.dsk}fill`])?.id ?? a.options.source }),
 	}
 
 	actions.input_assign = {
-		name: 'Route: give an input slot a source',
+		name: 'Assign Input',
 		description: 'Which physical source sits on Input 1-20.',
 		options: [
 			{
 				type: 'dropdown',
-				label: 'Input slot',
+				label: 'Input Channel',
 				id: 'slot',
 				default: 'INPUT1',
 				choices: sources.slotChoices(),
@@ -89,7 +89,7 @@ function routingActions(self, actions) {
 			},
 			{
 				type: 'dropdown',
-				label: 'Source',
+				label: 'Input Type',
 				id: 'source',
 				default: 'HDMI1',
 				choices: sources.physicalChoices(true),

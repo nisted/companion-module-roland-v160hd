@@ -14,6 +14,7 @@ const system = require('./src/system')
 const tally = require('./src/tally')
 const snapshots = require('./src/snapshots')
 const sources = require('./src/sources')
+const refresh = require('./src/refresh')
 
 const { CONN_FIELDS, checkField } = config
 
@@ -33,6 +34,7 @@ class v160Instance extends InstanceBase {
 			...system,
 			...tally,
 			...snapshots,
+			...refresh,
 		})
 		this.MEM = {}
 
@@ -73,6 +75,7 @@ class v160Instance extends InstanceBase {
 			this.stopLabelRefresh()
 			this.stopConfirm()
 			this.stopSnapshots()
+			this.stopRefresh()
 			if (this.socket !== undefined) {
 				this.socket.destroy()
 				delete this.socket
@@ -87,8 +90,7 @@ class v160Instance extends InstanceBase {
 		this.initFeedbacks()
 		this.initVariables()
 		this.initPresets()
-		this.checkAllFeedbacks()
-		this.checkVariables()
+		this.refreshAll()
 	}
 
 	/** Action recorder: Companion says recording started or stopped */

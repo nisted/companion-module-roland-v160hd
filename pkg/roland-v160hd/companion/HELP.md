@@ -30,7 +30,7 @@ This is a rebel version of the community V-160HD module (thanks, Joseph Adams an
 | Allow system settings                                | On to start. Actions and presets for MENU → SYSTEM and friends.                                                                                                 |
 | Allow risky system settings                          | Off to start. The ones that can take the output off air. See below.                                                                                             |
 | Second press within (seconds)                        | How long a risky button waits for its second press. 5 to start.                                                                                                 |
-| Tally colours, border, "Show … on"                   | Defaults for the **Tally: full look** feedback. See below.                                                                                                      |
+| Tally colours, border, "Show … on"                   | Defaults for the **Tally State** feedback. See below.                                                                                                           |
 | Snapshots                                            | Restore, rename or delete a saved snapshot (pick, then Save). See below.                                                                                        |
 | Chatty log                                           | Everything sent and received, in the log.                                                                                                                       |
 
@@ -59,16 +59,17 @@ The old module fired status requests at the switcher in bursts and never checked
 - **Polling never piles up**, and takes a breather if the switcher goes quiet, then picks up again when it speaks.
 - **ERR answers are logged in plain words** (out of range, overridden by another setting, and so on).
 - **Memory names are read once** after connecting, not every round, and they're shown as text now.
+- **Only what changed gets redrawn.** Replies are gathered for a moment (50 ms), then only the feedbacks and variables whose values actually changed go to Companion. Your own button presses still show straight away.
 
 ## Routing (all with the same source list)
 
 Every routing action takes the same list, in the same order: **Input 1-20, HDMI 1-8, SDI 1-8, Still 1-16**. Turn on the expression switch and feed it a variable: `INPUT11`, `HDMI2`, `STILL5`, or just `11` for Input 11.
 
-- **Route: Program (PGM) source** / **Route: Preview (PVW) source**
-- **Route: Aux source** (Aux 1-3)
-- **Route: PinP & Key source** (1-4). The two duplicate PinP source actions are now one.
-- **Route: DSK key source** / **Route: DSK fill source** (DSK 1-2). Fill only counts in External Key mode, and Roland has no named command for it.
-- **Route: give an input slot a source** (Input 1-20 ← HDMI, SDI, Still or N/A)
+- **Select PGM Source** / **Select PVW Source**
+- **Assign Aux** (Aux 1-3)
+- **PinP & Key Set Source** (1-4). The two duplicate PinP source actions are now one.
+- **Set DSK Key Source** / **Set DSK Fill Source** (DSK 1-2). Fill only counts in External Key mode, and Roland has no named command for it.
+- **Assign Input** (Input 1-20 ← HDMI, SDI, Still or N/A)
 - **Transition: Cut** / **Transition: Auto**, optionally straight to a source, Auto with a time (0-4 s)
 - **Output fade (fade to black)**: toggle, out or in
 
@@ -76,9 +77,9 @@ The action recorder works: switch things on the panel while recording and they t
 
 ## Everything else
 
-Output assign, aux mute and link, PinP & Key on/off on PGM or PVW, every PinP & Key parameter (position, size, crop, border, chroma and the rest), DSK on/off and type, transitions, panel buttons, memories (load, save, initialise), macros 1-100, freeze, and camera control (PTZ, zoom, focus, exposure, presets, tally), plus **Send a raw command** for anything else.
+Output assign, aux mute and link, PinP & Key on/off on PGM or PVW (**PinP & Key Bus Select**), every PinP & Key parameter (position, size, crop, border, chroma and the rest), DSK on/off and type, transitions, panel buttons, memories (load, save, initialise), macros 1-100, freeze, and camera control (PTZ, zoom, focus, exposure, presets, tally), plus **Send a raw command** for anything else.
 
-**PnP & Key: allow on the Program / Sub Program layer** is the layer setting, not "put it on air". For on air, use **PnP & Key: on/off on PGM or PVW**. (That mix-up is probably upstream issue #24.)
+**PinP & Key Enable/Disable** is the layer setting (may this PinP/Key be used on the Program / Sub Program layer), not "put it on air". For on and off air, use **PinP & Key Bus Select**. The tooltips say so too. (That mix-up is probably upstream issue #24.)
 
 ## Labels (the multiview names)
 
@@ -113,9 +114,9 @@ Not in yet: CTL A/B, EXP, GPI and keypad assigns (they use a different list, sti
 
 Snapshots live in the connection's settings, so they go wherever a Companion export goes.
 
-## Tally: full look
+## Tally State
 
-One feedback, **Tally: full look**, for any source button:
+One feedback, **Tally State**, for any source button. Out of the box it shows the lot:
 
 - **Red** when it's the main Program source, **green** on Preview, **red with a green border** on both.
 - **PinP**: yellow squares in the corners, laid out like the panel. P1 top-left, P2 top-right, P3 bottom-left, P4 bottom-right.
@@ -124,14 +125,20 @@ One feedback, **Tally: full look**, for any source button:
 - **Aux**: green markers down the right-hand side, Aux 1-3 between the P2 and P4 corners.
 - Filled marker with black text = on Program. Black marker with coloured text = on Preview.
 
-The connection page sets the colours and which sources show each group (all of them to start). Each feedback can override both. The Program, Preview and Cut presets use it.
+The connection page sets the colours and which sources show each group (all of them to start). Switch on **Change default behaviour** on a button to get the rest:
+
+- **Indicate in X State**: **Program and Preview (main sources)** is the look above. **Program (A)**, **Preview (B)**, **Both** and **Either** use the switcher's own tally instead (which also counts a source that's on air inside a PinP, key or DSK), like the old Tally State did.
+- Which markers show, and the button's own colours.
+
+The Program, Preview and Cut presets use it. Buttons made with the old **Tally State** or rebel.4's **Tally: full look** are upgraded to it: old Tally State buttons keep their Program/Preview choice, with the markers off. Note: an old Tally State's own button colours can't be carried over, so they now use the tally colours (red, green).
+
+Tally State is drawn on the button, so it doesn't use a style you set on the feedback.
 
 ## Feedbacks
 
-- **Tally: source is on Program / Preview**: any of the 52 sources (Input 1-20 included), program, preview, both or either.
 - **Route: source is on a destination**: PGM, PVW, Aux, PinP & Key, DSK key or fill. An input and the HDMI/SDI it's given count as the same picture.
 - **Route: input slot has a source**, **Output fade: faded to black**, **Memory: last loaded**
-- Plus aux mute and link, output assign, PinP & Key on air, freeze.
+- **Aux Tally State**, **PinP/Key Source State**, plus aux mute and link, output assign, PinP & Key on air, freeze.
 
 ## Variables
 
@@ -140,7 +147,7 @@ The connection page sets the colours and which sources show each group (all of t
 ## Presets
 
 - **Cut and Auto**, and **Cut straight to Input 1-20**
-- **Program** and **Preview**: Input 1-20, plus HDMI, SDI and Stills
+- **Program** and **Preview**: Input 1-20, plus HDMI, SDI and Stills. The button shows just the source name; Tally State colours it.
 - **Aux 1-3**, **PinP & Key 1-4** (with on/off), **DSK 1-2** (with on/off): Input 1-20
 - **Memories 1-30**, labelled with their names from the switcher, lit when loaded
 - **Macros 1-100**

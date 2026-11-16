@@ -40,7 +40,7 @@ module.exports = {
 		// Button text follows the labels live (form chosen on the connection page)
 		const short = (s) => `$(${L}:name_${s.id.toLowerCase()})`
 		const full = (s) => self.sourceName(s.id, 'full')
-		const look = (s) => ({ feedbackId: 'tallyLook', options: { source: s.id } })
+		const look = (s) => ({ feedbackId: 'tally', options: { input: s.id } })
 
 		// ── 1. Program / Preview / Cut / Auto ──
 		section('transitions', 'Cut and Auto')
@@ -54,7 +54,7 @@ module.exports = {
 			button(
 				`pgm_${s.id}`,
 				`Program: ${full(s)}`,
-				`PGM\\n${short(s)}`,
+				short(s),
 				[{ actionId: 'select_pgm', options: { source: s.id } }],
 				[look(s)],
 			)
@@ -64,7 +64,7 @@ module.exports = {
 			button(
 				`pvw_${s.id}`,
 				`Preview: ${full(s)}`,
-				`PVW\\n${short(s)}`,
+				short(s),
 				[{ actionId: 'select_pvw', options: { source: s.id } }],
 				[look(s)],
 			)
@@ -74,7 +74,7 @@ module.exports = {
 			button(
 				`pgm_${s.id}`,
 				`Program: ${full(s)}`,
-				`PGM\\n${short(s)}`,
+				short(s),
 				[{ actionId: 'select_pgm', options: { source: s.id } }],
 				[look(s)],
 			)
@@ -84,7 +84,7 @@ module.exports = {
 			button(
 				`pvw_${s.id}`,
 				`Preview: ${full(s)}`,
-				`PVW\\n${short(s)}`,
+				short(s),
 				[{ actionId: 'select_pvw', options: { source: s.id } }],
 				[look(s)],
 			)

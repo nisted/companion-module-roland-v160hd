@@ -99,16 +99,29 @@ module.exports = {
 	/** Draw the look. Returns the advanced feedback result. */
 	tallyLook: function (fb) {
 		const o = fb.options || {}
-		const src = sources.resolveSource(o.source)
+		const custom = o.custom === true || o.custom === 'true'
+		const src = sources.resolveSource(o.input ?? o.source)
 		if (!src) return {}
 		const show = (g) => {
-			const v = String(o[`show_${g}`] ?? 'default')
+			const v = custom ? String(o[`show_${g}`] ?? 'default') : 'default'
 			if (v === 'on') return true
 			if (v === 'off') return false
 			return this.tallyGroupDefault(g, src.id)
 		}
 		const st = this.tallyState(src.id)
-		const col = (k) => this._tallyColour(o, k)
+		const col = (k) => this._tallyColour(custom ? o : {}, k)
+		// Indicate in X State: 'full' (default) uses the main PGM/PVW sources; the others
+		// use the switcher's own tally, like upstream's Tally State did
+		const state = custom ? String(o.state ?? 'full') : 'full'
+		if (state !== 'full') {
+			const t = (this.TALLY || {})[src.id] || 0
+			const p = (t & 0x01) !== 0
+			const v = (t & 0x02) !== 0
+			if (state === 'program') Object.assign(st, { pgm: p, pvw: false })
+			else if (state === 'preview') Object.assign(st, { pgm: false, pvw: v })
+			else if (state === 'both') Object.assign(st, { pgm: p && v, pvw: p && v })
+			else if (state === 'either') Object.assign(st, { pgm: p, pvw: v })
+		}
 		const out = {}
 		const W = (fb.image && fb.image.width) || 72
 		const H = (fb.image && fb.image.height) || 72
@@ -168,6 +181,7 @@ module.exports = {
 
 	tallyFeedbacks: function (feedbacks) {
 		const self = this
+		const ifCustom = '$(options:custom)'
 		const showOpt = (g) => ({
 			type: 'dropdown',
 			label: g.name,
@@ -178,26 +192,55 @@ module.exports = {
 				{ id: 'on', label: 'Show' },
 				{ id: 'off', label: 'Hide' },
 			],
+			isVisibleExpression: ifCustom,
 		})
 		const colourOpts = Object.keys(DEFAULT_COLOURS).map((k) => ({
 			type: 'colorpicker',
 			label: COLOUR_NAMES[k],
 			id: `c_${k}`,
 			default: DEFAULT_COLOURS[k],
-			isVisibleExpression: '$(options:ownColours)',
+			isVisibleExpression: '$(options:custom) && $(options:ownColours)',
 		}))
-		feedbacks.tallyLook = {
+		// One tally feedback (upstream's name). Out of the box it shows everything;
+		// "Change default behaviour" reveals the rest.
+		feedbacks.tally = {
 			type: 'advanced',
-			name: 'Tally: full look (PGM/PVW, PinP, Key, DSK, Aux)',
+			name: 'Tally State',
 			description:
-				'Red on PGM, green on PVW, red with a green border on both. Corner markers for PinP (squares) and keys (circles), DSK top/bottom centre, Aux down the right. Filled = on PGM, black = on PVW.',
+				'Indicate if Input Channel is in Preview or Program. Red on PGM, green on PVW, red with a green border on both, plus corner markers for PinP (squares), keys (circles), DSK (top/bottom centre) and Aux (down the right).',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Source',
-					id: 'source',
+					label: 'Input Channel',
+					id: 'input',
 					default: 'INPUT1',
 					choices: sources.sourceChoices(),
+					tooltip:
+						"Input 1-20, HDMI 1-8, SDI 1-8 or Still 1-16. An input and the HDMI/SDI it's given count as the same.",
+				},
+				{
+					type: 'checkbox',
+					label: 'Change default behaviour',
+					id: 'custom',
+					default: false,
+					tooltip:
+						'Off: everything shows, in the connection page colours. On: pick what lights the button, which markers show, and its own colours.',
+				},
+				{
+					type: 'dropdown',
+					label: 'Indicate in X State',
+					id: 'state',
+					default: 'full',
+					choices: [
+						{ id: 'full', label: 'Program and Preview (main sources)' },
+						{ id: 'program', label: 'Program (A)' },
+						{ id: 'preview', label: 'Preview (B)' },
+						{ id: 'both', label: 'Both' },
+						{ id: 'either', label: 'Either' },
+					],
+					tooltip:
+						"Program and Preview: red when it's the main PGM source, green when it's the main PVW source. The others use the switcher's own tally, which also counts a source that's on air inside a PinP, key or DSK.",
+					isVisibleExpression: ifCustom,
 				},
 				...GROUPS.map(showOpt),
 				{
@@ -205,6 +248,7 @@ module.exports = {
 					label: 'Own colours (instead of the connection page ones)',
 					id: 'ownColours',
 					default: false,
+					isVisibleExpression: ifCustom,
 				},
 				...colourOpts,
 			],
@@ -221,7 +265,8 @@ module.exports = {
 				id: 'tallyHead',
 				label: 'Tally look',
 				width: 12,
-				value: 'For the "Tally: full look" feedback. Each button can still pick its own colours and groups.',
+				value:
+					'For the "Tally State" feedback. Each button can still pick its own colours and groups (Change default behaviour).',
 			},
 		]
 		for (const k of Object.keys(DEFAULT_COLOURS)) {
@@ -232,7 +277,7 @@ module.exports = {
 					label: `Tally colour: ${COLOUR_NAMES[k]}`,
 					width: 9,
 					default: DEFAULT_COLOURS[k],
-					tooltip: 'Default for every "Tally: full look" feedback. A button can pick its own instead.',
+					tooltip: 'Default for every "Tally State" feedback. A button can pick its own instead.',
 				}),
 			)
 		}
