@@ -154,6 +154,8 @@ module.exports = {
 				label: 'Setting',
 				id: 'setting',
 				default: settings[0].id,
+				// No expression toggle: the Value lists below hide by this (Companion only allows that on plain fields)
+				disableAutoExpression: true,
 				choices: settings.map((s) => ({ id: s.id, label: s.name })),
 			},
 		]
@@ -213,6 +215,7 @@ module.exports = {
 				label: 'Category',
 				id: 'cat',
 				default: 'macro',
+				disableAutoExpression: true,
 				choices: USER_SW_CATEGORIES.map((c) => ({ id: c.id, label: c.name })),
 			},
 		]

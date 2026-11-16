@@ -103,7 +103,7 @@ test('upgrade: rebel.5 buttons go back (Tally State upstream, look -> Multi Tall
 	assert.equal(b.feedbackId, 'tallyLook')
 	assert.equal(b.options.custom, true)
 	assert.equal(b.options.show_aux, 'off')
-	assert.equal(b.options.show_pinp, 'default')
+	assert.equal(b.options.show_pinp, 'on')
 	assert.ok(!('state' in b.options))
 	assert.equal(c.feedbackId, 'tally')
 	assert.equal(c.options.state, 'program')

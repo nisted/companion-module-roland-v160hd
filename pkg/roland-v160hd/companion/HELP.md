@@ -130,11 +130,15 @@ Two tally feedbacks. **Tally State type** on the connection page decides which t
 - **Aux**: green markers down the right-hand side, Aux 1-3 between the P2 and P4 corners.
 - Filled marker with black text = on Program. Black marker with coloured text = on Preview.
 
-The connection page sets the colours and which sources show each group (all of them to start). Tick **Change default behaviour** on a button to choose its markers and colours. On Companion 5, Multi Tally's style overrides pick from its outputs (background colour, picture).
+The connection page sets the colours and which sources show each group (all of them to start). Tick **Change default behaviour** on a button to choose which markers show (**Show**, **Hide**, or **Default** = as the connection page says); tick **Customise colours** to set its own colours. Unticked, their options stay hidden. On Companion 5, Multi Tally's style overrides pick from its outputs (background colour, picture).
 
 The Program, Preview and Cut presets use Multi Tally (or, with Upstream, Tally State: green on Preview, red on Program).
 
 **Upgrading from rebel.5:** Tally State buttons go back to upstream's Tally State, so their own style overrides work again ("Either" becomes Program (A)). Full-look buttons become Multi Tally. A button dragged in from a rebel.5 preset may come back as Tally State with no style: drag the preset in again.
+
+## Every option has a value
+
+Companion 5 skips an action or feedback if any of its options is blank, even a hidden one. Every preset now carries all its options, and the rebel.7 upgrade fills blank options on buttons made before (system settings, USER SW assign, System: setting is, Multi Tally).
 
 ## Feedbacks
 

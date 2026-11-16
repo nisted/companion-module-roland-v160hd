@@ -125,7 +125,7 @@ module.exports = {
 					type: 'dropdown',
 					label: 'Aux',
 					id: 'aux',
-					default: '000011',
+					default: '012203',
 					choices: [
 						{ id: '012203', label: 'Aux 1' },
 						{ id: '012503', label: 'Aux 2' },
@@ -136,7 +136,7 @@ module.exports = {
 					type: 'dropdown',
 					label: 'Mute/Unmute',
 					id: 'mute',
-					default: 1,
+					default: '01',
 					choices: [
 						{ id: '00', label: 'Unmute' },
 						{ id: '01', label: 'Mute' },
@@ -1537,9 +1537,7 @@ module.exports = {
 					type: 'dropdown',
 					label: 'Enable/Disable',
 					id: 'enable',
-					default: 1,
-					tooltip:
-						"Allows or blocks this PinP/Key on the Program / Sub Program layer. Not on/off air: that's 'PinP & Key Bus Select'.",
+					default: '01',
 					choices: [
 						{ id: '00', label: 'Disable' },
 						{ id: '01', label: 'Enable' },
@@ -2307,6 +2305,7 @@ module.exports = {
 		self.labelActions(actions)
 		self.systemActions(actions)
 		self.snapshotActions(actions)
+		self.actionDefs = actions
 		self.setActionDefinitions(actions)
 	},
 }

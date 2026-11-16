@@ -319,6 +319,7 @@ module.exports = {
 		self.systemFeedbacks(feedbacks)
 		self.tallyFeedbacks(feedbacks)
 		self._feedbackIds = Object.keys(feedbacks)
+		self.feedbackDefs = feedbacks
 		self.setFeedbackDefinitions(feedbacks)
 	},
 }

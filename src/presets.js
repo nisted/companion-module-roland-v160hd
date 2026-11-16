@@ -318,6 +318,8 @@ module.exports = {
 		}
 		self.systemPresets(section, button, layered)
 
+		// Companion 5 skips an action/feedback with any blank option: give presets all of them
+		require('./optionDefaults').fillPresets(presets, self.actionDefs || {}, self.feedbackDefs || {})
 		self.setPresetDefinitions(structure, presets)
 	},
 }

@@ -224,12 +224,13 @@ module.exports = {
 			type: 'dropdown',
 			label: g.name,
 			id: `show_${g.id}`,
-			default: 'default',
+			default: 'on',
 			choices: [
-				{ id: 'default', label: 'As the connection page says' },
 				{ id: 'on', label: 'Show' },
 				{ id: 'off', label: 'Hide' },
+				{ id: 'default', label: 'Default' },
 			],
+			tooltip: 'Default: as set on the connection page.',
 			isVisibleExpression: ifCustom,
 		})
 		const colourOpts = Object.keys(DEFAULT_COLOURS).map((k) => ({
@@ -260,15 +261,19 @@ module.exports = {
 					label: 'Change default behaviour',
 					id: 'custom',
 					default: false,
+					// No expression toggle: the options below hide by this (Companion only allows that on plain fields)
+					disableAutoExpression: true,
 					tooltip:
 						'Off: all markers show, in the connection page colours. On: choose which markers show and set colours for this button.',
 				},
 				...GROUPS.map(showOpt),
 				{
 					type: 'checkbox',
-					label: 'Own colours (instead of the connection page ones)',
+					label: 'Customise colours',
 					id: 'ownColours',
 					default: false,
+					disableAutoExpression: true,
+					tooltip: 'Off: the connection page colours. On: set colours for this button.',
 					isVisibleExpression: ifCustom,
 				},
 				...colourOpts,

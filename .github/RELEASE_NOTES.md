@@ -1,11 +1,7 @@
-Pre-release for testing on a real V-160HD. Fixes rebel.5's tally change.
+Pre-release for testing on a real V-160HD. Fixes buttons Companion 5 was skipping.
 
-**Tally State type (connection page):** Both (default), Upstream or Full look.
-- **Tally State** is upstream's feedback again, unchanged: on/off, your style overrides work, Indicate in X State = Program (A) / Preview (B) / Both.
-- **Multi Tally** is the full look (red/green, border, PinP/Key/DSK/Aux markers). Change default behaviour reveals markers and colours. It now tells Companion 5 which properties it sets (background colour, picture).
-- Upgrade: rebel.5-changed Tally State buttons go back to upstream (overrides work again; "Either" becomes Program (A)); full-look buttons become Multi Tally with any missing options filled in.
-- Presets use Multi Tally (or Tally State, green on Preview and red on Program, when the type is Upstream).
+- **Blank options:** Companion 5 skips an action or feedback if any option is blank, even a hidden one. System setting presets, USER SW assign, System: setting is and Multi Tally presets only filled some options, so they never ran. Every preset now carries every option, and an upgrade fills blank options on existing buttons. Two upstream defaults that were never valid (Aux mute, Freeze enable) are fixed too.
+- **Hiding works:** Change default behaviour, Customise colours, the system Setting and the USER SW Category no longer have an expression toggle. Companion only allows hide rules on fields without one.
+- **Multi Tally wording:** marker choices are Show (default), Hide, Default (as the connection page says); "Own colours" is now "Customise colours".
 
-**Wording:** connection page and other tooltips rewritten in plain wording.
-
-91 tests.
+96 tests.

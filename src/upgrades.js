@@ -244,7 +244,7 @@ function upgradeRebel6Tally(_context, props) {
 	const fillLook = (o) => {
 		if (!('custom' in o)) set(o, 'custom', false)
 		if (!('ownColours' in o)) set(o, 'ownColours', false)
-		for (const g of TALLY_GROUPS) if (!(`show_${g.id}` in o)) set(o, `show_${g.id}`, 'default')
+		for (const g of TALLY_GROUPS) if (!(`show_${g.id}` in o)) set(o, `show_${g.id}`, 'on')
 		for (const [k, v] of Object.entries(TALLY_DEFAULT_COLOURS)) if (!(`c_${k}` in o)) set(o, `c_${k}`, v)
 	}
 	const updatedFeedbacks = []
@@ -275,6 +275,66 @@ function upgradeRebel6Tally(_context, props) {
 	return { updatedConfig, updatedActions: [], updatedFeedbacks }
 }
 
+/**
+ * rebel.7: Companion 5 skips an action/feedback with any blank option. Presets
+ * before rebel.7 only filled some options (system actions, System: setting is,
+ * USER SW assign, Multi Tally), so fill every blank one with its default.
+ */
+function upgradeRebel7FillOptions(_context, props) {
+	const { staticDefaults } = require('./optionDefaults')
+	const fill = (list, kind, idKey) => {
+		const out = []
+		for (const x of list) {
+			const d = staticDefaults(kind, x[idKey])
+			if (!d) continue
+			let changed = false
+			for (const [k, v] of Object.entries(d)) {
+				const cur = x.options[k]
+				const blank =
+					cur === undefined ||
+					cur === null ||
+					cur === '' ||
+					(wrapped(cur) && !cur.isExpression && (cur.value === undefined || cur.value === null || cur.value === ''))
+				if (blank) {
+					if (wrapped(cur)) x.options[k] = { ...cur, value: v }
+					else set(x.options, k, v)
+					changed = true
+				}
+			}
+			if (changed) out.push(x)
+		}
+		return out
+	}
+	// Upstream defaults that were never valid choices (Companion 5 skips them)
+	const badDefaults = {
+		aux_mute: { aux: ['000011', '012203'], mute: [1, '01'] },
+		freezeSwitchSelectEnableDisable: { enable: [1, '01'] },
+	}
+	const fixed = []
+	for (const a of props.actions) {
+		const b = badDefaults[a.actionId]
+		if (!b) continue
+		let changed = false
+		for (const [k, [from, to]] of Object.entries(b)) {
+			const v = get(a.options, k)
+			if (v === undefined && !(k in a.options)) {
+				set(a.options, k, to)
+				changed = true
+			} else if (v !== undefined && String(v) === String(from)) {
+				set(a.options, k, to)
+				changed = true
+			}
+		}
+		if (changed) fixed.push(a)
+	}
+	const filled = fill(props.actions, 'action', 'actionId')
+	return {
+		updatedConfig: null,
+		updatedActions: [...new Set([...fixed, ...filled])],
+		updatedFeedbacks: fill(props.feedbacks, 'feedback', 'feedbackId'),
+	}
+}
+
 module.exports = [
 	function () {
 		return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
@@ -301,6 +361,7 @@ module.exports = [
 	upgradeRebel4Config,
 	upgradeRebel5Tally,
 	upgradeRebel6Tally,
+	upgradeRebel7FillOptions,
 ]
 
 module.exports.upgradeToRebelRouting = upgradeToRebelRouting
@@ -309,4 +370,5 @@ module.exports.upgradeSetByAction = upgradeSetByAction
 module.exports.upgradeRebel4Config = upgradeRebel4Config
 module.exports.upgradeRebel5Tally = upgradeRebel5Tally
 module.exports.upgradeRebel6Tally = upgradeRebel6Tally
+module.exports.upgradeRebel7FillOptions = upgradeRebel7FillOptions
 module.exports._test = { get, set, tokenFromHex, tokenFromNum }
