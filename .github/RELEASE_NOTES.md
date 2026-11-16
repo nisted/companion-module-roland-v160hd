@@ -1,7 +1,7 @@
-Pre-release for testing on a real V-160HD. Fixes buttons Companion 5 was skipping.
+Pre-release for testing on a real V-160HD.
 
-- **Blank options:** Companion 5 skips an action or feedback if any option is blank, even a hidden one. System setting presets, USER SW assign, System: setting is and Multi Tally presets only filled some options, so they never ran. Every preset now carries every option, and an upgrade fills blank options on existing buttons. Two upstream defaults that were never valid (Aux mute, Freeze enable) are fixed too.
-- **Hiding works:** Change default behaviour, Customise colours, the system Setting and the USER SW Category no longer have an expression toggle. Companion only allows hide rules on fields without one.
-- **Multi Tally wording:** marker choices are Show (default), Hide, Default (as the connection page says); "Own colours" is now "Customise colours".
+- **Polling off:** Program, Preview, Aux, PinP & Key and DSK sources are read on connect and again whenever the switcher reports a tally change. Before, with polling off, Program/Preview were never read, so Multi Tally and the source feedbacks had nothing to go on.
+- **Connection page saves again:** the snapshot pickers had an empty "nothing picked" value, which Companion 5 counts as invalid, so Save stayed greyed out. They now use a real "—" choice.
+- Includes rebel.7: every preset and old button gets all its options; hide rules work; Multi Tally wording.
 
-96 tests.
+101 tests.

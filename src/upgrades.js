@@ -335,6 +335,22 @@ function upgradeRebel7FillOptions(_context, props) {
 	}
 }
 
+/** rebel.8: the snapshot pickers on the connection page get a real 'nothing picked' value */
+function upgradeRebel8Config(_context, props) {
+	const c = props.config
+	if (!c) return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
+	const NONE = '__none__'
+	const next = { ...c }
+	let changed = false
+	for (const k of ['snapRestore', 'snapRename', 'snapDelete']) {
+		if (next[k] === undefined || next[k] === null || next[k] === '') {
+			next[k] = NONE
+			changed = true
+		}
+	}
+	return { updatedConfig: changed ? next : null, updatedActions: [], updatedFeedbacks: [] }
+}
+
 module.exports = [
 	function () {
 		return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
@@ -362,6 +378,7 @@ module.exports = [
 	upgradeRebel5Tally,
 	upgradeRebel6Tally,
 	upgradeRebel7FillOptions,
+	upgradeRebel8Config,
 ]
 
 module.exports.upgradeToRebelRouting = upgradeToRebelRouting
@@ -371,4 +388,5 @@ module.exports.upgradeRebel4Config = upgradeRebel4Config
 module.exports.upgradeRebel5Tally = upgradeRebel5Tally
 module.exports.upgradeRebel6Tally = upgradeRebel6Tally
 module.exports.upgradeRebel7FillOptions = upgradeRebel7FillOptions
+module.exports.upgradeRebel8Config = upgradeRebel8Config
 module.exports._test = { get, set, tokenFromHex, tokenFromNum }

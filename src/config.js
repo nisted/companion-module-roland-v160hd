@@ -250,7 +250,7 @@ module.exports = {
 				default: true,
 				disableAutoExpression: true,
 				tooltip:
-					'On: the module reads the switcher state regularly, so feedbacks and variables follow changes made on the panel. One command at a time. Off: feedbacks follow only this module and the tally the switcher sends.',
+					'On: the module reads the switcher state regularly, so feedbacks and variables follow changes made on the panel. One command at a time. Off: sources are read on connect and whenever the switcher reports a tally change; panel changes that do not change tally (for example Aux) are not seen.',
 			}),
 			...lock({
 				type: 'textinput',

@@ -198,13 +198,48 @@ module.exports = {
 		self.readSystem()
 		self.readLayerTypes()
 		self.readDskOnAir()
+		// Main sources once on connect, so feedbacks work with polling off too
+		self.readRouting()
 		self.startLabelRefresh()
 		self.runPendingRestore()
+	},
+
+	/** Program, Preview, Aux, PinP & Key and DSK sources (named or low-level) */
+	readRouting: function () {
+		let self = this
+		if (!self._queue) return
+		if (self.PROTOCOL === 'named') {
+			self._read('QPGM;', 'PGM')
+			self._read('QPST;', 'PST')
+			for (let a = 1; a <= 3; a++) self._read(`QAUX:AUX${a};`, 'AUX')
+		} else {
+			self.getAuxSources()
+		}
+		self.getPinpKeySource()
+		self.getDskSource()
+		self.getPinpKeyTally()
+		self.readDskOnAir()
+	},
+
+	/**
+	 * The switcher pushes tally when anything goes on or off air. With polling off,
+	 * read the sources again then (once per burst), so Program/Preview stay right.
+	 */
+	_tallyChanged: function () {
+		let self = this
+		if (self.config.polling || !self._protocolDecided) return
+		if (self._routingTimer) return
+		self._routingTimer = setTimeout(() => {
+			self._routingTimer = undefined
+			self.readRouting()
+		}, 100)
 	},
 
 	// ── Polling ────────────────────────────────────────────────────────────
 
 	_stopPolling: function () {
+		clearTimeout(this._routingTimer)
+		this._routingTimer = undefined
 		if (this.INTERVAL) clearInterval(this.INTERVAL)
 		this.INTERVAL = undefined
 	},
@@ -218,7 +253,7 @@ module.exports = {
 		if (!self.config.polling) {
 			self.log(
 				'info',
-				"Polling's off, so feedbacks only follow what this module does and what the switcher shouts about (tally).",
+				'Polling is off: sources are read on connect and again whenever the switcher reports a tally change.',
 			)
 			return
 		}
@@ -584,7 +619,11 @@ module.exports = {
 		if (!Number.isFinite(status)) return
 		if (!this.TALLY) this.TALLY = {}
 		const s = sources.sourceFromHex(sources.hexOf(index))
-		if (s) this.TALLY[s.id] = status
+		if (s && this.TALLY[s.id] !== status) {
+			const first = this.TALLY[s.id] === undefined
+			this.TALLY[s.id] = status
+			if (!first) this._tallyChanged()
+		}
 	},
 
 	/** Low-level answers (DTH:aabbcc,value) */

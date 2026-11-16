@@ -82,7 +82,11 @@ function pickParts(raw) {
 	return p.length ? p : ALL_PARTS
 }
 
+/** The 'nothing picked' value for the connection page snapshot dropdowns */
+const SNAP_NONE = '__none__'
+
 module.exports = {
+	SNAP_NONE,
 	SNAPSHOT_PARTS: PARTS,
 	snapshotRuns: runs,
 
@@ -380,7 +384,8 @@ module.exports = {
 
 	snapshotConfigFields: function () {
 		const names = this.snapshotNames()
-		const choices = [{ id: '', label: '—' }, ...names.map((n) => ({ id: n, label: n }))]
+		// A real 'nothing picked' choice: Companion 5 treats an empty value as invalid and won't let the page save
+		const choices = [{ id: SNAP_NONE, label: '—' }, ...names.map((n) => ({ id: n, label: n }))]
 		const label = this.label || 'this-connection'
 		return [
 			{
@@ -400,7 +405,7 @@ module.exports = {
 				id: 'snapRestore',
 				label: 'Restore on Save',
 				width: 6,
-				default: '',
+				default: SNAP_NONE,
 				choices,
 				tooltip:
 					'Sends this snapshot to the switcher when you press Save. Only the settings in the snapshot are changed.',
@@ -412,7 +417,7 @@ module.exports = {
 				width: 6,
 				default: ALL_PARTS.filter((p) => p !== 'risky'),
 				choices: PARTS,
-				isVisibleExpression: "$(options:snapRestore) != ''",
+				isVisibleExpression: `$(options:snapRestore) != '${SNAP_NONE}'`,
 				tooltip: 'Risky settings are left out unless you pick them here.',
 			},
 			{
@@ -420,7 +425,7 @@ module.exports = {
 				id: 'snapRename',
 				label: 'Rename',
 				width: 6,
-				default: '',
+				default: SNAP_NONE,
 				choices,
 				tooltip: 'Choose a snapshot, type the new name, then Save.',
 			},
@@ -430,7 +435,7 @@ module.exports = {
 				label: 'New name',
 				width: 6,
 				default: '',
-				isVisibleExpression: "$(options:snapRename) != ''",
+				isVisibleExpression: `$(options:snapRename) != '${SNAP_NONE}'`,
 				tooltip: 'Up to 40 characters.',
 			},
 			{
@@ -438,7 +443,7 @@ module.exports = {
 				id: 'snapDelete',
 				label: 'Delete on Save',
 				width: 6,
-				default: '',
+				default: SNAP_NONE,
 				choices,
 				tooltip: 'Deleted when you press Save. Export it first to keep a copy.',
 			},
@@ -448,6 +453,7 @@ module.exports = {
 	/** Connection page snapshot picks: do them, then clear the fields. Returns true if any. */
 	takeSnapshotConfigOps: function (next) {
 		let any = false
+		for (const k of ['snapRename', 'snapDelete', 'snapRestore']) if (next[k] === SNAP_NONE) next[k] = ''
 		if (next.snapRename && next.snapRenameTo) {
 			this.config = next
 			this.renameSnapshot(next.snapRename, next.snapRenameTo)
@@ -465,10 +471,10 @@ module.exports = {
 			this._pendingRestore = { name: next.snapRestore, parts: next.snapRestoreParts }
 			any = true
 		}
-		next.snapRename = ''
+		next.snapRename = SNAP_NONE
 		next.snapRenameTo = ''
-		next.snapDelete = ''
-		next.snapRestore = ''
+		next.snapDelete = SNAP_NONE
+		next.snapRestore = SNAP_NONE
 		return any
 	},
 

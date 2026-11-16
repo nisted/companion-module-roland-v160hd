@@ -136,6 +136,10 @@ The Program, Preview and Cut presets use Multi Tally (or, with Upstream, Tally S
 
 **Upgrading from rebel.5:** Tally State buttons go back to upstream's Tally State, so their own style overrides work again ("Either" becomes Program (A)). Full-look buttons become Multi Tally. A button dragged in from a rebel.5 preset may come back as Tally State with no style: drag the preset in again.
 
+## Polling off
+
+With polling off, the module reads Program, Preview, Aux, PinP & Key and DSK sources when it connects, and again whenever the switcher reports a tally change. Changes on the panel that don't change tally (an Aux source, for example) only show with polling on.
+
 ## Every option has a value
 
 Companion 5 skips an action or feedback if any of its options is blank, even a hidden one. Every preset now carries all its options, and the rebel.7 upgrade fills blank options on buttons made before (system settings, USER SW assign, System: setting is, Multi Tally).

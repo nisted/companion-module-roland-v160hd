@@ -342,8 +342,8 @@ test('snapshot: rename and delete from the connection page, fields cleared after
 	const next = { ...self.config, snapRename: 'A', snapRenameTo: 'Hall 9', snapDelete: 'B' }
 	self.takeSnapshotConfigOps(next)
 	assert.deepEqual(Object.keys(JSON.parse(next.snapshots)), ['Hall 9'])
-	assert.equal(next.snapRename, '')
-	assert.equal(next.snapDelete, '')
+	assert.equal(next.snapRename, '__none__')
+	assert.equal(next.snapDelete, '__none__')
 })
 
 test('snapshot writes: runs of up to 8 bytes, reserved byte skipped', () => {
