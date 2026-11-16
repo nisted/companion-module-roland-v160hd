@@ -40,7 +40,18 @@ module.exports = {
 		// Button text follows the labels live (form chosen on the connection page)
 		const short = (s) => `$(${L}:name_${s.id.toLowerCase()})`
 		const full = (s) => self.sourceName(s.id, 'full')
-		const look = (s) => ({ feedbackId: 'tally', options: { input: s.id } })
+		// Multi Tally when the connection offers it; otherwise upstream Tally State (red on PGM, green on PVW)
+		const look = (s) =>
+			self.tallyMode() === 'upstream'
+				? [
+						{
+							feedbackId: 'tally',
+							options: { input: s.id, state: 'preview' },
+							style: { bgcolor: GREEN, color: WHITE },
+						},
+						{ feedbackId: 'tally', options: { input: s.id, state: 'program' }, style: { bgcolor: RED, color: WHITE } },
+					]
+				: [{ feedbackId: 'tallyLook', options: { input: s.id } }]
 
 		// ── 1. Program / Preview / Cut / Auto ──
 		section('transitions', 'Cut and Auto')
@@ -56,7 +67,7 @@ module.exports = {
 				`Program: ${full(s)}`,
 				short(s),
 				[{ actionId: 'select_pgm', options: { source: s.id } }],
-				[look(s)],
+				look(s),
 			)
 		}
 		section('pvw', `Preview: ${W} 1-20`)
@@ -66,7 +77,7 @@ module.exports = {
 				`Preview: ${full(s)}`,
 				short(s),
 				[{ actionId: 'select_pvw', options: { source: s.id } }],
-				[look(s)],
+				look(s),
 			)
 		}
 		section('pgm_direct', 'Program: HDMI, SDI and Stills')
@@ -76,7 +87,7 @@ module.exports = {
 				`Program: ${full(s)}`,
 				short(s),
 				[{ actionId: 'select_pgm', options: { source: s.id } }],
-				[look(s)],
+				look(s),
 			)
 		}
 		section('pvw_direct', 'Preview: HDMI, SDI and Stills')
@@ -86,7 +97,7 @@ module.exports = {
 				`Preview: ${full(s)}`,
 				short(s),
 				[{ actionId: 'select_pvw', options: { source: s.id } }],
-				[look(s)],
+				look(s),
 			)
 		}
 		section('cut_to', `Cut straight to ${W} 1-20`)
@@ -96,7 +107,7 @@ module.exports = {
 				`Cut to ${full(s)}`,
 				`CUT\\n${short(s)}`,
 				[{ actionId: 'cut', options: { source: s.id } }],
-				[look(s)],
+				look(s),
 			)
 		}
 

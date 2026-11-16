@@ -237,7 +237,7 @@ module.exports = {
 					label: 'Text',
 					id: 'text',
 					default: '',
-					tooltip: 'Up to 8 characters. Takes variables, so a label can follow a custom variable or another module.',
+					tooltip: 'Up to 8 characters; longer text is cut to 8. Accepts variables and expressions.',
 				},
 			],
 			callback: (a) => self.setLabel(a.options.target, a.options.text),

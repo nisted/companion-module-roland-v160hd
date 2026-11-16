@@ -227,6 +227,54 @@ function upgradeRebel5Tally(_context, props) {
 	return { updatedConfig: null, updatedActions: [], updatedFeedbacks }
 }
 
+/**
+ * rebel.6: Tally State back to upstream (on/off, so style overrides work again),
+ * the full look as its own feedback, Multi Tally (id 'tallyLook').
+ *  - 'tally' carrying rebel.5 look options with state 'full' (or none): was a full
+ *    look (rebel.4 Tally: full look, or a rebel.5 preset) -> Multi Tally.
+ *  - Any other 'tally': upstream Tally State. Look options removed; state kept if
+ *    it's Program/Preview/Both, 'Either' or missing -> Program (A).
+ *  - Multi Tally gets any missing options at their defaults.
+ *  - Config: Tally State type = Both where it isn't set.
+ */
+function upgradeRebel6Tally(_context, props) {
+	const { TALLY_DEFAULT_COLOURS, TALLY_GROUPS } = require('./tally')
+	const lookKeys = ['custom', 'ownColours', ...TALLY_GROUPS.map((g) => `show_${g.id}`)]
+	const colourKeys = Object.keys(TALLY_DEFAULT_COLOURS).map((k) => `c_${k}`)
+	const fillLook = (o) => {
+		if (!('custom' in o)) set(o, 'custom', false)
+		if (!('ownColours' in o)) set(o, 'ownColours', false)
+		for (const g of TALLY_GROUPS) if (!(`show_${g.id}` in o)) set(o, `show_${g.id}`, 'default')
+		for (const [k, v] of Object.entries(TALLY_DEFAULT_COLOURS)) if (!(`c_${k}` in o)) set(o, `c_${k}`, v)
+	}
+	const updatedFeedbacks = []
+	for (const f of props.feedbacks) {
+		const o = f.options
+		if (f.feedbackId === 'tallyLook') {
+			rename(o, 'source', 'input')
+			delete o.state
+			fillLook(o)
+			updatedFeedbacks.push(f)
+		} else if (f.feedbackId === 'tally') {
+			const st = get(o, 'state')
+			const hadLook = lookKeys.some((k) => k in o)
+			if (hadLook && (st === undefined || st === 'full')) {
+				f.feedbackId = 'tallyLook'
+				delete o.state
+				fillLook(o)
+			} else {
+				for (const k of [...lookKeys, ...colourKeys, 'borderWidth']) delete o[k]
+				if (!['program', 'preview', 'both'].includes(st)) set(o, 'state', 'program')
+			}
+			updatedFeedbacks.push(f)
+		}
+	}
+	const c = props.config
+	let updatedConfig = null
+	if (c && c.tallyMode === undefined) updatedConfig = { ...c, tallyMode: 'both' }
+	return { updatedConfig, updatedActions: [], updatedFeedbacks }
+}
+
 module.exports = [
 	function () {
 		return { updatedConfig: null, updatedActions: [], updatedFeedbacks: [] }
@@ -252,6 +300,7 @@ module.exports = [
 	upgradeSetByAction,
 	upgradeRebel4Config,
 	upgradeRebel5Tally,
+	upgradeRebel6Tally,
 ]
 
 module.exports.upgradeToRebelRouting = upgradeToRebelRouting
@@ -259,4 +308,5 @@ module.exports.upgradeRebelConfig = upgradeRebelConfig
 module.exports.upgradeSetByAction = upgradeSetByAction
 module.exports.upgradeRebel4Config = upgradeRebel4Config
 module.exports.upgradeRebel5Tally = upgradeRebel5Tally
+module.exports.upgradeRebel6Tally = upgradeRebel6Tally
 module.exports._test = { get, set, tokenFromHex, tokenFromNum }

@@ -18,6 +18,7 @@
  * Each feedback can override both.
  */
 
+const { combineRgb } = require('@companion-module/base')
 const sources = require('./sources')
 const { Canvas } = require('./draw')
 const { sameSource } = require('./feedbacksSources')
@@ -110,18 +111,6 @@ module.exports = {
 		}
 		const st = this.tallyState(src.id)
 		const col = (k) => this._tallyColour(custom ? o : {}, k)
-		// Indicate in X State: 'full' (default) uses the main PGM/PVW sources; the others
-		// use the switcher's own tally, like upstream's Tally State did
-		const state = custom ? String(o.state ?? 'full') : 'full'
-		if (state !== 'full') {
-			const t = (this.TALLY || {})[src.id] || 0
-			const p = (t & 0x01) !== 0
-			const v = (t & 0x02) !== 0
-			if (state === 'program') Object.assign(st, { pgm: p, pvw: false })
-			else if (state === 'preview') Object.assign(st, { pgm: false, pvw: v })
-			else if (state === 'both') Object.assign(st, { pgm: p && v, pvw: p && v })
-			else if (state === 'either') Object.assign(st, { pgm: p, pvw: v })
-		}
 		const out = {}
 		const W = (fb.image && fb.image.width) || 72
 		const H = (fb.image && fb.image.height) || 72
@@ -179,8 +168,57 @@ module.exports = {
 		return out
 	},
 
+	/** Which tally feedbacks this connection offers: 'both' (default), 'upstream' or 'look' */
+	tallyMode: function () {
+		const m = String((this.config && this.config.tallyMode) || 'both')
+		return ['both', 'upstream', 'look'].includes(m) ? m : 'both'
+	},
+
 	tallyFeedbacks: function (feedbacks) {
 		const self = this
+		const mode = this.tallyMode()
+
+		// Tally State: upstream's feedback, as upstream had it (on/off, your style overrides)
+		if (mode !== 'look') {
+			feedbacks.tally = {
+				type: 'boolean',
+				name: 'Tally State',
+				description: 'Indicate if Input Channel is in Preview or Program',
+				defaultStyle: { color: combineRgb(255, 255, 255), bgcolor: combineRgb(255, 0, 0) },
+				options: [
+					{
+						type: 'dropdown',
+						label: 'Input Channel',
+						id: 'input',
+						default: 'INPUT1',
+						choices: sources.sourceChoices(),
+					},
+					{
+						type: 'dropdown',
+						label: 'Indicate in X State',
+						id: 'state',
+						default: 'program',
+						choices: [
+							{ id: 'program', label: 'Program (A)' },
+							{ id: 'preview', label: 'Preview (B)' },
+							{ id: 'both', label: 'Both' },
+						],
+					},
+				],
+				callback: (fb) => {
+					const src = sources.resolveSource(fb.options.input)
+					if (!src) return false
+					const status = (self.TALLY || {})[src.id] || 0
+					if (fb.options.state === 'preview') return (status & 0x02) !== 0
+					if (fb.options.state === 'both') return (status & 0x03) === 0x03
+					return (status & 0x01) !== 0
+				},
+			}
+		}
+
+		if (mode === 'upstream') return
+
+		// Multi Tally: the full look, drawn by the module
 		const ifCustom = '$(options:custom)'
 		const showOpt = (g) => ({
 			type: 'dropdown',
@@ -201,13 +239,12 @@ module.exports = {
 			default: DEFAULT_COLOURS[k],
 			isVisibleExpression: '$(options:custom) && $(options:ownColours)',
 		}))
-		// One tally feedback (upstream's name). Out of the box it shows everything;
-		// "Change default behaviour" reveals the rest.
-		feedbacks.tally = {
+		feedbacks.tallyLook = {
 			type: 'advanced',
-			name: 'Tally State',
+			name: 'Multi Tally',
 			description:
-				'Indicate if Input Channel is in Preview or Program. Red on PGM, green on PVW, red with a green border on both, plus corner markers for PinP (squares), keys (circles), DSK (top/bottom centre) and Aux (down the right).',
+				'Red when the source is the main PGM source, green when it is the main PVW source, red with a green border when both. Corner markers for PinP (squares), keys (circles), DSK (top/bottom centre) and Aux (down the right).',
+			affectedProperties: ['bgcolor', 'imageBuffer'],
 			options: [
 				{
 					type: 'dropdown',
@@ -216,7 +253,7 @@ module.exports = {
 					default: 'INPUT1',
 					choices: sources.sourceChoices(),
 					tooltip:
-						"Input 1-20, HDMI 1-8, SDI 1-8 or Still 1-16. An input and the HDMI/SDI it's given count as the same.",
+						'Input 1-20, HDMI 1-8, SDI 1-8 or Still 1-16. An input and the HDMI/SDI given to it count as the same.',
 				},
 				{
 					type: 'checkbox',
@@ -224,23 +261,7 @@ module.exports = {
 					id: 'custom',
 					default: false,
 					tooltip:
-						'Off: everything shows, in the connection page colours. On: pick what lights the button, which markers show, and its own colours.',
-				},
-				{
-					type: 'dropdown',
-					label: 'Indicate in X State',
-					id: 'state',
-					default: 'full',
-					choices: [
-						{ id: 'full', label: 'Program and Preview (main sources)' },
-						{ id: 'program', label: 'Program (A)' },
-						{ id: 'preview', label: 'Preview (B)' },
-						{ id: 'both', label: 'Both' },
-						{ id: 'either', label: 'Either' },
-					],
-					tooltip:
-						"Program and Preview: red when it's the main PGM source, green when it's the main PVW source. The others use the switcher's own tally, which also counts a source that's on air inside a PinP, key or DSK.",
-					isVisibleExpression: ifCustom,
+						'Off: all markers show, in the connection page colours. On: choose which markers show and set colours for this button.',
 				},
 				...GROUPS.map(showOpt),
 				{
@@ -266,8 +287,22 @@ module.exports = {
 				label: 'Tally look',
 				width: 12,
 				value:
-					'For the "Tally State" feedback. Each button can still pick its own colours and groups (Change default behaviour).',
+					'Defaults for the "Multi Tally" feedback. Each button can set its own colours and markers (Change default behaviour).',
 			},
+			...lock({
+				type: 'dropdown',
+				id: 'tallyMode',
+				label: 'Tally State type',
+				width: 9,
+				default: 'both',
+				choices: [
+					{ id: 'both', label: 'Both: Tally State (upstream) and Multi Tally' },
+					{ id: 'upstream', label: 'Upstream: Tally State only' },
+					{ id: 'look', label: 'Full look: Multi Tally only' },
+				],
+				tooltip:
+					'Tally State is the upstream on/off feedback and uses your style overrides. Multi Tally draws the full look (colours and markers). Changing this after buttons are set up can break their style overrides.',
+			}),
 		]
 		for (const k of Object.keys(DEFAULT_COLOURS)) {
 			fields.push(
@@ -277,7 +312,7 @@ module.exports = {
 					label: `Tally colour: ${COLOUR_NAMES[k]}`,
 					width: 9,
 					default: DEFAULT_COLOURS[k],
-					tooltip: 'Default for every "Tally State" feedback. A button can pick its own instead.',
+					tooltip: 'Default for every Multi Tally feedback. A button can set its own instead.',
 				}),
 			)
 		}
@@ -300,7 +335,8 @@ module.exports = {
 					width: 9,
 					default: all,
 					choices,
-					tooltip: 'Sources whose buttons show this, unless the feedback says otherwise. All of them to start.',
+					tooltip:
+						'Sources whose Multi Tally buttons show this, unless the feedback says otherwise. Default: all sources.',
 				}),
 			)
 		}

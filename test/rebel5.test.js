@@ -2,7 +2,6 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const { makeFake } = require('../test-support/fake')
-const upgrades = require('../src/upgrades')
 
 function build(cfg) {
 	const f = makeFake(cfg)
@@ -62,7 +61,7 @@ test('lag: a whole polling round in one batch is one refresh', async () => {
 	// Wait for the batch timer (allowing for a busy test machine)
 	for (let t = 0; t < 100 && self.checked.length === 0; t++) await new Promise((r) => setTimeout(r, 20))
 	assert.equal(self.checked.length, 1)
-	assert.ok(self.checked[0].includes('tally'))
+	assert.ok(self.checked[0].includes('tallyLook'))
 	assert.ok(!self.checked[0].includes('systemIs'))
 })
 
@@ -71,7 +70,7 @@ test('lag: a button press refreshes straight away', () => {
 	self.PROTOCOL = 'named'
 	self.actionDefs.select_pgm.callback({ options: { source: 'INPUT3' } })
 	assert.equal(self.checked.length, 1)
-	assert.ok(self.checked[0].includes('tally'))
+	assert.ok(self.checked[0].includes('tallyLook'))
 })
 
 // ── Wording ─────────────────────────────────────────────────────────────
@@ -100,60 +99,6 @@ test('wording: upstream names are back, PinP throughout', () => {
 	assert.ok(!/PnP/.test(all), 'no PnP in shown text')
 })
 
-// ── One tally feedback ──────────────────────────────────────────────────
-
-test('tally: one feedback; default shows everything and ignores the hidden options', () => {
-	const { self } = build()
-	assert.equal(self.feedbackDefs.tallyLook, undefined)
-	assert.equal(self.feedbackDefs.tally.type, 'advanced')
-	const ids = self.feedbackDefs.tally.options.map((o) => o.id)
-	assert.deepEqual(ids.slice(0, 3), ['input', 'custom', 'state'])
-	for (const o of self.feedbackDefs.tally.options.slice(2))
-		assert.ok(o.isVisibleExpression, `${o.id} is hidden until asked`)
-	self.DATA.pgmsource = '02'
-	self.DATA.pvwsource = '02'
-	const fb = (options) => self.feedbackDefs.tally.callback({ options, image: { width: 72, height: 72 } })
-	// Left-over hidden settings don't count while Change default behaviour is off
-	const r = fb({ input: 'HDMI3', custom: false, show_main: 'off', state: 'preview' })
-	assert.equal(r.bgcolor, 0xcc0000)
-	assert.ok(r.imageBuffer, 'border drawn')
-})
-
-test("tally: Indicate in X State uses the switcher's tally, like upstream", () => {
-	const { self } = build()
-	self.TALLY.HDMI3 = 2 // preview only
-	const fb = (state) =>
-		self.feedbackDefs.tally.callback({
-			options: { input: 'HDMI3', custom: true, state },
-			image: { width: 72, height: 72 },
-		})
-	assert.equal(fb('program').bgcolor, undefined)
-	assert.equal(fb('preview').bgcolor, 0x00a000)
-	assert.equal(fb('either').bgcolor, 0x00a000)
-	assert.equal(fb('both').bgcolor, undefined)
-})
-
-test('tally: old buttons upgrade to the one feedback', () => {
-	const feedbacks = [
-		{ feedbackId: 'tally', options: { input: 'INPUT3', state: 'preview' } },
-		{ feedbackId: 'tallyLook', options: { source: 'HDMI2', show_main: 'default', show_pinp: 'default' } },
-		{ feedbackId: 'tallyLook', options: { source: 'HDMI4', show_aux: 'off' } },
-	]
-	const r = upgrades.upgradeRebel5Tally({}, { feedbacks, actions: [], config: {} })
-	assert.equal(r.updatedFeedbacks.length, 3)
-	const [a, b, c] = r.updatedFeedbacks
-	assert.equal(a.options.custom, true)
-	assert.equal(a.options.state, 'preview')
-	assert.equal(a.options.show_pinp, 'off')
-	assert.equal(b.feedbackId, 'tally')
-	assert.equal(b.options.input, 'HDMI2')
-	assert.equal(b.options.custom, false)
-	assert.equal(c.options.custom, true)
-	// Already new: left alone
-	const again = upgrades.upgradeRebel5Tally({}, { feedbacks: [a], actions: [], config: {} })
-	assert.equal(again.updatedFeedbacks.length, 0)
-})
-
 // ── Presets ─────────────────────────────────────────────────────────────
 
 test('presets: no PGM/PVW text on the Program and Preview buttons', () => {
@@ -161,6 +106,6 @@ test('presets: no PGM/PVW text on the Program and Preview buttons', () => {
 	for (const [id, p] of Object.entries(self.presetDefs)) {
 		if (!/^(pgm|pvw)_/.test(id)) continue
 		assert.ok(!/PGM|PVW/.test(p.style.text), `${id}: ${p.style.text}`)
-		assert.equal(p.feedbacks[0].feedbackId, 'tally')
+		assert.equal(p.feedbacks[0].feedbackId, 'tallyLook')
 	}
 })

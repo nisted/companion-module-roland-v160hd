@@ -316,7 +316,7 @@ module.exports = {
 			id: 'parts',
 			default: ALL_PARTS,
 			choices: PARTS,
-			tooltip: 'Everything to start. Pick fewer to save or restore only some of it.',
+			tooltip: 'Default: everything. Choose fewer to save or restore only those parts.',
 		}
 		actions.snapshot_save = {
 			name: 'Snapshot: save',
@@ -402,7 +402,8 @@ module.exports = {
 				width: 6,
 				default: '',
 				choices,
-				tooltip: 'Writes this snapshot to the switcher when you press Save. Only what it holds is changed.',
+				tooltip:
+					'Sends this snapshot to the switcher when you press Save. Only the settings in the snapshot are changed.',
 			},
 			{
 				type: 'multidropdown',
@@ -421,7 +422,7 @@ module.exports = {
 				width: 6,
 				default: '',
 				choices,
-				tooltip: 'Pick one, type the new name, then Save.',
+				tooltip: 'Choose a snapshot, type the new name, then Save.',
 			},
 			{
 				type: 'textinput',
@@ -439,7 +440,7 @@ module.exports = {
 				width: 6,
 				default: '',
 				choices,
-				tooltip: 'Gone for good when you press Save. Export it first if you might want it back.',
+				tooltip: 'Deleted when you press Save. Export it first to keep a copy.',
 			},
 		]
 	},

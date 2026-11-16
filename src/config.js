@@ -8,7 +8,7 @@ const BUNDLE_NOTICE =
 	'<a href="https://github.com/nisted/companion-modules" target="_blank">github.com/nisted/companion-modules</a>'
 
 const CHANGE_BACK_TIP =
-	"A 'Set connection settings' action put this value here. Tick, then Save, to get back what you'd typed before and type it here again."
+	"Set by a 'Set connection settings' action. Tick and Save to restore the value typed here before."
 
 /**
  * Connection fields that the 'Set connection settings' action can change.
@@ -33,6 +33,7 @@ const CONN_FIELDS = {
 	allowRisky: { label: 'Allow risky system settings', kind: 'bool' },
 	confirmSecs: { label: 'Second press within (seconds)', kind: 'int', min: 1, max: 30 },
 	tallyBorder: { label: 'Tally: PGM + PVW border width', kind: 'int', min: 0, max: 20 },
+	tallyMode: { label: 'Tally State type', kind: 'choice', choices: ['both', 'upstream', 'look'] },
 }
 // Tally look colours and which sources show each group
 for (const [k, name] of Object.entries({
@@ -213,7 +214,7 @@ module.exports = {
 				label: CONN_FIELDS.host.label,
 				width: 9,
 				default: '192.168.0.1',
-				tooltip: "The V-160HD's IP address. You'll find it on the switcher: MENU → LAN CONTROL → INFORMATION.",
+				tooltip: 'IP address of the V-160HD (MENU → LAN CONTROL → INFORMATION).',
 			}),
 			...lock({
 				type: 'textinput',
@@ -221,7 +222,7 @@ module.exports = {
 				label: CONN_FIELDS.port.label,
 				width: 9,
 				default: '8023',
-				tooltip: 'The switcher listens on 8023. Leave it unless you know otherwise. (1 to 65535)',
+				tooltip: 'TCP port. Default 8023. (1 to 65535)',
 			}),
 			...lock({
 				type: 'textinput',
@@ -229,8 +230,7 @@ module.exports = {
 				label: CONN_FIELDS.password.label,
 				width: 9,
 				default: '0000',
-				tooltip:
-					'The 4-digit password from MENU → LAN CONTROL on the switcher. It has to be set there or nothing works.',
+				tooltip: '4-digit LAN control password, set on the switcher in MENU → LAN CONTROL. Required.',
 			}),
 			...lock({
 				type: 'dropdown',
@@ -240,7 +240,7 @@ module.exports = {
 				default: 'auto',
 				choices: PROTOCOL_CHOICES,
 				tooltip:
-					"Auto asks the switcher its firmware when it connects: 3.40 or later gets Roland's named commands (Input 1-20 in every destination, one-shot tally), older gets the low-level address commands. Force one if Auto guesses wrong.",
+					"Auto reads the firmware version on connect: 3.40 or later uses Roland's named commands (Input 1-20 in every destination, tally in one command), older firmware uses the low-level address commands. Choose one to override Auto.",
 			}),
 			...lock({
 				type: 'checkbox',
@@ -250,7 +250,7 @@ module.exports = {
 				default: true,
 				disableAutoExpression: true,
 				tooltip:
-					"On: the module keeps asking the switcher what's what, so feedbacks and variables follow changes made on the panel too. It's polite about it now: one question at a time, never piling up. Off: feedbacks only follow this module and the tally the switcher shouts about.",
+					'On: the module reads the switcher state regularly, so feedbacks and variables follow changes made on the panel. One command at a time. Off: feedbacks follow only this module and the tally the switcher sends.',
 			}),
 			...lock({
 				type: 'textinput',
@@ -260,12 +260,12 @@ module.exports = {
 				default: '500',
 				isVisibleExpression: '$(options:polling)',
 				tooltip:
-					"How often to ask. A round is skipped if the last one hasn't been answered, so going lower can't swamp the switcher. (100 to 30000)",
+					'Time between polling rounds. A round is skipped if the previous one is still unanswered. (100 to 30000)',
 			}),
 			{
 				type: 'static-text',
 				id: 'tuning',
-				label: "Fine tuning (leave these unless something's up)",
+				label: 'Fine tuning',
 				width: 12,
 				value: '',
 			},
@@ -275,7 +275,7 @@ module.exports = {
 				label: CONN_FIELDS.timeout.label,
 				width: 9,
 				default: '500',
-				tooltip: 'How long to wait for the switcher to answer one command before moving on. (50 to 5000)',
+				tooltip: 'Time to wait for a reply to one command before moving on. (50 to 5000)',
 			}),
 			...lock({
 				type: 'textinput',
@@ -284,7 +284,7 @@ module.exports = {
 				width: 9,
 				default: '20',
 				tooltip:
-					'A breath between one answer and the next command. Roland asks for at least 20 ms between writes. (0 to 1000)',
+					'Delay between a reply and the next command. Roland specifies at least 20 ms between writes. (0 to 1000)',
 			}),
 			...lock({
 				type: 'textinput',
@@ -292,8 +292,7 @@ module.exports = {
 				label: CONN_FIELDS.retries.label,
 				width: 9,
 				default: '1',
-				tooltip:
-					"If a button's command gets no answer, send it again this many times. Toggles are never resent (twice would undo it). (0 to 5)",
+				tooltip: 'Number of times to resend a command that gets no reply. Toggle commands are never resent. (0 to 5)',
 			}),
 			...lock({
 				type: 'textinput',
@@ -302,7 +301,7 @@ module.exports = {
 				width: 9,
 				default: '5',
 				tooltip:
-					'After this many unanswered commands in a row, polling takes a breather until the switcher speaks again. (1 to 100)',
+					'Polling pauses after this many unanswered commands in a row, and resumes when the switcher replies. (1 to 100)',
 			}),
 			{
 				type: 'static-text',
@@ -318,7 +317,7 @@ module.exports = {
 				width: 9,
 				default: 'xpt',
 				choices: NAMING_CHOICES,
-				tooltip: 'XPT 1 - GFX-B (HDMI 3), or Input 1 - GFX-B (HDMI 3). Used everywhere the module names an input slot.',
+				tooltip: 'XPT 1 - GFX-B (HDMI 3) or Input 1 - GFX-B (HDMI 3). Used wherever the module names an input slot.',
 			}),
 			...lock({
 				type: 'dropdown',
@@ -328,7 +327,7 @@ module.exports = {
 				default: 'labelOnly',
 				choices: BUTTON_TEXT_CHOICES,
 				tooltip:
-					'What the source presets show. No label? It falls back to the default name (HDMI 3), then the slot (XPT 1). Also the $(…:name_…) variables.',
+					'Text on the source presets and in the $(…:name_…) variables. Without a label: the default name (HDMI 3), then the slot (XPT 1).',
 			}),
 			...lock({
 				type: 'textinput',
@@ -338,7 +337,7 @@ module.exports = {
 				default: '30',
 				isVisibleExpression: '!$(options:polling)',
 				tooltip:
-					'With polling off, read the labels this often in case someone changes them on the panel. With polling on they come in with polling. (0 to 3600, 0 = only on connect and after a set)',
+					'With polling off, how often to read the labels. With polling on, labels are read with polling. (0 to 3600; 0 = only on connect and after a set)',
 			}),
 			{
 				type: 'static-text',
@@ -355,7 +354,7 @@ module.exports = {
 				default: true,
 				disableAutoExpression: true,
 				tooltip:
-					"Actions and presets for the switcher's MENU → SYSTEM settings (Monitor SW, test pattern, multi-view, panel lock and more).",
+					"Actions and presets for the switcher's MENU → SYSTEM settings (Monitor SW, test pattern, multi-view, panel lock and others).",
 			}),
 			...lock({
 				type: 'checkbox',
@@ -366,7 +365,7 @@ module.exports = {
 				disableAutoExpression: true,
 				isVisibleExpression: '$(options:allowSystem)',
 				tooltip:
-					'The ones that can take the output off air: frame rate, system format, output formats, HDCP, reference. Their actions say ⚠ RISKY, their presets have a hazard border, and they need a second press.',
+					'Settings that can take the output off air: frame rate, system format, output formats, HDCP, reference. Their actions are marked ⚠ RISKY, their presets have a hazard border, and they need a second press.',
 			}),
 			...lock({
 				type: 'textinput',
@@ -375,7 +374,7 @@ module.exports = {
 				width: 9,
 				default: '5',
 				tooltip:
-					'Risky actions and snapshot restores with risky settings want a second press inside this time. (1 to 30)',
+					'Risky actions, and snapshot restores that include risky settings, need a second press within this time. (1 to 30)',
 			}),
 			...self.tallyConfigFields(lock),
 			...self.snapshotConfigFields(),
@@ -385,7 +384,7 @@ module.exports = {
 				label: CONN_FIELDS.verbose.label,
 				width: 9,
 				default: false,
-				tooltip: 'Logs everything sent and received. Handy for hunting problems, noisy otherwise.',
+				tooltip: 'Logs every command sent and reply received. For troubleshooting.',
 			}),
 			{
 				type: 'static-text',

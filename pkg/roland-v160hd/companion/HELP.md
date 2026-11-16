@@ -30,7 +30,8 @@ This is a rebel version of the community V-160HD module (thanks, Joseph Adams an
 | Allow system settings                                | On to start. Actions and presets for MENU → SYSTEM and friends.                                                                                                 |
 | Allow risky system settings                          | Off to start. The ones that can take the output off air. See below.                                                                                             |
 | Second press within (seconds)                        | How long a risky button waits for its second press. 5 to start.                                                                                                 |
-| Tally colours, border, "Show … on"                   | Defaults for the **Tally State** feedback. See below.                                                                                                           |
+| Tally State type                                     | **Both** (default), **Upstream** or **Full look**. Which tally feedbacks the connection offers. See below.                                                      |
+| Tally colours, border, "Show … on"                   | Defaults for the **Multi Tally** feedback. See below.                                                                                                           |
 | Snapshots                                            | Restore, rename or delete a saved snapshot (pick, then Save). See below.                                                                                        |
 | Chatty log                                           | Everything sent and received, in the log.                                                                                                                       |
 
@@ -114,9 +115,13 @@ Not in yet: CTL A/B, EXP, GPI and keypad assigns (they use a different list, sti
 
 Snapshots live in the connection's settings, so they go wherever a Companion export goes.
 
-## Tally State
+## Tally State and Multi Tally
 
-One feedback, **Tally State**, for any source button. Out of the box it shows the lot:
+Two tally feedbacks. **Tally State type** on the connection page decides which this connection offers: **Both** (default), **Upstream** (Tally State only) or **Full look** (Multi Tally only). Changing it after buttons are set up can break their style overrides, so set it once.
+
+**Tally State** is upstream's feedback, unchanged: on or off from the switcher's own tally, **Indicate in X State** = **Program (A)**, **Preview (B)** or **Both**, and your style overrides do the colouring. The switcher's tally also counts a source that's on air inside a PinP, key or DSK.
+
+**Multi Tally** draws the full look:
 
 - **Red** when it's the main Program source, **green** on Preview, **red with a green border** on both.
 - **PinP**: yellow squares in the corners, laid out like the panel. P1 top-left, P2 top-right, P3 bottom-left, P4 bottom-right.
@@ -125,14 +130,11 @@ One feedback, **Tally State**, for any source button. Out of the box it shows th
 - **Aux**: green markers down the right-hand side, Aux 1-3 between the P2 and P4 corners.
 - Filled marker with black text = on Program. Black marker with coloured text = on Preview.
 
-The connection page sets the colours and which sources show each group (all of them to start). Switch on **Change default behaviour** on a button to get the rest:
+The connection page sets the colours and which sources show each group (all of them to start). Tick **Change default behaviour** on a button to choose its markers and colours. On Companion 5, Multi Tally's style overrides pick from its outputs (background colour, picture).
 
-- **Indicate in X State**: **Program and Preview (main sources)** is the look above. **Program (A)**, **Preview (B)**, **Both** and **Either** use the switcher's own tally instead (which also counts a source that's on air inside a PinP, key or DSK), like the old Tally State did.
-- Which markers show, and the button's own colours.
+The Program, Preview and Cut presets use Multi Tally (or, with Upstream, Tally State: green on Preview, red on Program).
 
-The Program, Preview and Cut presets use it. Buttons made with the old **Tally State** or rebel.4's **Tally: full look** are upgraded to it: old Tally State buttons keep their Program/Preview choice, with the markers off. Note: an old Tally State's own button colours can't be carried over, so they now use the tally colours (red, green).
-
-Tally State is drawn on the button, so it doesn't use a style you set on the feedback.
+**Upgrading from rebel.5:** Tally State buttons go back to upstream's Tally State, so their own style overrides work again ("Either" becomes Program (A)). Full-look buttons become Multi Tally. A button dragged in from a rebel.5 preset may come back as Tally State with no style: drag the preset in again.
 
 ## Feedbacks
 
@@ -147,7 +149,7 @@ Tally State is drawn on the button, so it doesn't use a style you set on the fee
 ## Presets
 
 - **Cut and Auto**, and **Cut straight to Input 1-20**
-- **Program** and **Preview**: Input 1-20, plus HDMI, SDI and Stills. The button shows just the source name; Tally State colours it.
+- **Program** and **Preview**: Input 1-20, plus HDMI, SDI and Stills. The button shows just the source name; Multi Tally colours it.
 - **Aux 1-3**, **PinP & Key 1-4** (with on/off), **DSK 1-2** (with on/off): Input 1-20
 - **Memories 1-30**, labelled with their names from the switcher, lit when loaded
 - **Macros 1-100**

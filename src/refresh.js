@@ -20,7 +20,8 @@ const BATCH_MS = 50
 
 /** Which parts of the state each feedback reads. Anything not listed reads 'data'. */
 const FEEDBACK_DEPS = {
-	tally: ['data', 'tally', 'mem00'],
+	tally: ['tally'],
+	tallyLook: ['data', 'mem00'],
 	labelMatches: ['labels'],
 	systemIs: ['sys'],
 	confirmPending: [],

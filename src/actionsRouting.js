@@ -85,7 +85,7 @@ function routingActions(self, actions) {
 				id: 'slot',
 				default: 'INPUT1',
 				choices: sources.slotChoices(),
-				tooltip: 'Input 1-20. Slots 11-20 on firmware below 3.40 may be turned down.',
+				tooltip: 'Input 1-20. Slots 11-20 may be refused on firmware below 3.40.',
 			},
 			{
 				type: 'dropdown',
@@ -184,7 +184,7 @@ function extraActions(self, actions) {
 				label: 'Command',
 				id: 'cmd',
 				default: '',
-				tooltip: "e.g. DTH:002100,2A or QPGM or GPO:GPO1,ON. The ';' is added if you leave it off.",
+				tooltip: "For example DTH:002100,2A, QPGM or GPO:GPO1,ON. A missing ';' is added.",
 			},
 		],
 		callback: (a) => {
