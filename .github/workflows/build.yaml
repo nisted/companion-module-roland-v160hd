@@ -44,3 +44,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: 'roland-v160hd-*.tgz'
+          # Tags with a hyphen (v3.0.0-rebel.5) are pre-releases; notes come from the repo
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          body_path: .github/RELEASE_NOTES.md
