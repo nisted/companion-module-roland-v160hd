@@ -10,6 +10,7 @@
  */
 
 const T = require('./systemTable')
+const { USER_SW_CATEGORIES } = require('./userSw')
 const mem = require('./mem')
 
 const RISKY_FLAG = '⚠ RISKY'
@@ -173,6 +174,7 @@ module.exports = {
 	systemActions: function (actions) {
 		const self = this
 		if (!self.systemAllowed()) return
+		self._userSwAction(actions)
 		for (const m of T.MENUS) {
 			const settings = menuSettings(m.id)
 			if (!settings.length) continue
@@ -192,6 +194,63 @@ module.exports = {
 					self.setSystem(id, a.options[`v_${id}`])
 				},
 			}
+		}
+	},
+
+	/** USER SW 1-4 assign: pick the switch, a category, then the item */
+	_userSwAction: function (actions) {
+		const self = this
+		const opts = [
+			{
+				type: 'dropdown',
+				label: 'USER switch',
+				id: 'sw',
+				default: '1',
+				choices: [1, 2, 3, 4].map((n) => ({ id: String(n), label: `USER ${n}` })),
+			},
+			{
+				type: 'dropdown',
+				label: 'Category',
+				id: 'cat',
+				default: 'macro',
+				choices: USER_SW_CATEGORIES.map((c) => ({ id: c.id, label: c.name })),
+			},
+		]
+		for (const c of USER_SW_CATEGORIES) {
+			if (c.items.length < 2) continue
+			opts.push({
+				type: 'dropdown',
+				label: 'Item',
+				id: `item_${c.id}`,
+				default: '0',
+				choices: c.items.map((it, i) => ({ id: String(i), label: it })),
+				isVisibleExpression: `$(options:cat) == '${c.id}'`,
+			})
+		}
+		actions.system_usersw = {
+			name: 'System: USER SW assign',
+			description: 'What the USER 1-4 buttons on the panel do. Pick the switch, a category, then the item.',
+			options: opts,
+			callback: (a) => {
+				const n = Number(String(a.options.sw).replace(/\D/g, ''))
+				const c = USER_SW_CATEGORIES.find((x) => x.id === String(a.options.cat).trim().toLowerCase())
+				if (!(n >= 1 && n <= 4) || !c) {
+					self.log(
+						'warn',
+						`System: USER SW assign: "${a.options.sw}" / "${a.options.cat}" isn't a switch and category I know.`,
+					)
+					return
+				}
+				const raw = c.items.length < 2 ? 0 : Number(a.options[`item_${c.id}`])
+				if (!Number.isInteger(raw) || raw < 0 || raw >= c.items.length) {
+					self.log(
+						'warn',
+						`System: USER SW assign: ${c.name} has items 0-${c.items.length - 1}, not "${a.options[`item_${c.id}`]}".`,
+					)
+					return
+				}
+				self.setSystem(`user_sw${n}`, String(c.start + raw))
+			},
 		}
 	},
 
@@ -240,6 +299,38 @@ module.exports = {
 		const self = this
 		if (!self.systemAllowed()) return
 		const L = self.label
+		// USER SW: one button per switch showing what it does now, plus a few handy assigns
+		section('sys_usersw', 'System: USER SW assign')
+		for (let n = 1; n <= 4; n++) {
+			button(`sys_user_sw${n}_show`, `USER ${n} SW: shows its assign`, `USER ${n}\\n$(${L}:sys_user_sw${n})`, [])
+			for (const [cat, item, text] of [
+				['freeze', 0, 'FREEZE'],
+				['autosw', 0, 'AUTO SW'],
+				['rec', 0, 'REC'],
+				['camera', 0, 'CAM MODE'],
+				['macro', 0, 'MACRO 1'],
+			]) {
+				const c = USER_SW_CATEGORIES.find((x) => x.id === cat)
+				button(
+					`sys_user_sw${n}_${cat}`,
+					`USER ${n} SW = ${c.name}${c.items.length > 1 ? ': ' + c.items[item] : ''}`,
+					`USER ${n}\\n${text}`,
+					[
+						{
+							actionId: 'system_usersw',
+							options: { sw: String(n), cat, ...(c.items.length > 1 ? { [`item_${cat}`]: String(item) } : {}) },
+						},
+					],
+					[
+						{
+							feedbackId: 'systemIs',
+							options: { setting: `user_sw${n}`, [`v_user_sw${n}`]: String(c.start + item) },
+							style: { bgcolor: 0xffc000, color: 0x000000 },
+						},
+					],
+				)
+			}
+		}
 		for (const m of T.MENUS) {
 			const risky = m.id === 'risky'
 			if (risky && !self.riskyAllowed()) continue

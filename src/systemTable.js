@@ -9,7 +9,7 @@
  * HDCP, reference). Those sit behind their own connection switch.
  *
  * Left out (flagged in the spec): reference clock/line adjust (02 01 05-08), CUT/AUTO
- * SW assign (02 01 0E-0F, labels garbled in Roland's PDF), USER SW 1-4, CTL A/B, EXP,
+ * SW assign (02 01 0E-0F, labels garbled in Roland's PDF), CTL A/B, EXP,
  * GPI and keypad assigns (numbers not documented: to probe on the unit). Their raw bytes
  * still travel in snapshots.
  */
@@ -316,6 +316,11 @@ const TALLY_EN = [
 	[0x4b, 'Aux 3'],
 ]
 for (const [b, n] of TALLY_EN) add('rs232', '09', b, `tally_en_${h(b).toLowerCase()}`, `Tally follows: ${n}`, DISEN)
+
+// ── 02 01 4C-53: USER SW 1-4 assign (2 bytes, list mapped on hardware: see userSw.js)
+const { USER_SW_VALUES } = require('./userSw')
+for (let i = 1; i <= 4; i++)
+	add('usersw', '01', 0x4a + i * 2, `user_sw${i}`, `USER ${i} SW assign`, USER_SW_VALUES, { size: 2 })
 
 /** Blocks read from the switcher (and kept whole in snapshots) */
 const READ_BLOCKS = [

@@ -99,7 +99,9 @@ Presets: a stepper for every setting (press to go to the next value, shows the c
 
 **Risky ones** (frame rate, system format, output formats, HDCP, reference) can take the output off air. They only appear once **Allow risky system settings** is on, their actions say **⚠ RISKY**, their presets have a hazard border, and they want a **second press** within the confirm time. The button flashes while it waits.
 
-Not in yet: USER SW 1-4, CTL A/B, EXP, GPI and keypad assigns. Roland doesn't say which number means which function, so they're coming once we've checked on a real switcher. They do travel in snapshots.
+**USER SW 1-4 assign** is in: **System: USER SW assign** (pick the switch, a category, then the item), a `sys_user_sw1`-`4` variable each, and presets. Roland doesn't publish these numbers, so they were mapped on a real V-160HD (firmware 3.60).
+
+Not in yet: CTL A/B, EXP, GPI and keypad assigns (they use a different list, still to map). They do travel in snapshots.
 
 ## Snapshots ("this is my Hall 9")
 

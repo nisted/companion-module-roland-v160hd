@@ -174,7 +174,7 @@ test('every system preset uses a real action and value', () => {
 	const { self } = build({ allowRisky: true })
 	let n = 0
 	for (const [id, p0] of Object.entries(self.presetDefs)) {
-		if (!id.startsWith('sys_')) continue
+		if (!id.startsWith('sys_') || id.startsWith('sys_user_sw')) continue
 		const p = p0.type === 'alternatives' ? p0.variants[0] : p0
 		const a = p.steps[0].down[0]
 		const def = self.actionDefs[a.actionId]
@@ -383,4 +383,54 @@ test('upgrade: existing connections get the new settings at the agreed defaults,
 	assert.equal(r.updatedConfig.labelrefresh, '30')
 	assert.equal(r.updatedConfig.tallyShow_pinp.length, 52)
 	assert.equal(up({}, { config: r.updatedConfig, actions: [], feedbacks: [] }).updatedConfig, null)
+})
+
+// ── USER SW assign (mapped on Nige's unit) ─────────────────────────────────
+
+test('USER SW list: 717 values, and the numbers read off the real switcher', () => {
+	const { USER_SW_VALUES, USER_SW_TOTAL, USER_SW_CATEGORIES } = require('../src/userSw')
+	assert.equal(USER_SW_TOTAL, 717)
+	const at = (v) => USER_SW_VALUES[v].label
+	assert.equal(at(40), 'Audio input mute: Audio In 1')
+	assert.equal(at(61), 'Audio output mute: Master output')
+	assert.equal(at(66), 'Voice changer SW: Audio In 1')
+	assert.equal(at(68), 'Reverb (momentary)')
+	assert.equal(at(70), 'Preset memory: Memory 1')
+	assert.equal(at(100), 'Input scan: Normal')
+	assert.equal(at(116), 'Rec control')
+	assert.equal(at(117), 'Macro execute: Macro 1')
+	assert.equal(at(217), 'GPO (one shot): GPO 1')
+	assert.equal(at(233), 'GPO (alternate): GPO 1')
+	assert.equal(at(249), 'Camera control: Mode')
+	assert.equal(at(250), 'Camera control: Pan left')
+	assert.equal(at(377), 'Camera control: Camera 16 select')
+	assert.equal(at(378), 'Graphics Presenter: Select next content')
+	assert.equal(at(506), 'VC-100UHD control: Select channel 1')
+	assert.equal(at(514), 'Yamaha mixer control: Control')
+	assert.equal(at(715), 'System: Effects transition sync')
+	assert.equal(USER_SW_CATEGORIES.length, 28)
+})
+
+test('USER SW assign action: Macro 1 on USER 3 writes 02 01 50 = 00 75', () => {
+	const { self, sent } = build()
+	self.actionDefs.system_usersw.callback({
+		options: { sw: '3', cat: 'macro', item_macro: '0' },
+		controlId: 'c',
+		actionId: 'system_usersw',
+	})
+	assert.ok(sent.includes('DTH:020150,0075;'), sent.join(' '))
+	// System first item = 715 = 05 4B (as read off the unit)
+	self.actionDefs.system_usersw.callback({
+		options: { sw: '4', cat: 'system', item_system: '0' },
+		controlId: 'c',
+		actionId: 'system_usersw',
+	})
+	assert.ok(sent.includes('DTH:020152,054B;'))
+	// What the unit reported, decoded into variables
+	mem.capture(self.MEM, '02014C', '002800420075027A')
+	self.checkVariables()
+	assert.equal(self.variableValues.sys_user_sw1, 'Audio input mute: Audio In 1')
+	assert.equal(self.variableValues.sys_user_sw2, 'Voice changer SW: Audio In 1')
+	assert.equal(self.variableValues.sys_user_sw3, 'Macro execute: Macro 1')
+	assert.equal(self.variableValues.sys_user_sw4, 'Graphics Presenter: Select next content')
 })
